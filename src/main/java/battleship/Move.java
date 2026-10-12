@@ -220,11 +220,4 @@ public class Move implements IMove {
 	public double getDurationInSeconds() {
 		return durationMillis / 1000.0;
 	}
-
-	// Método utilitário para imprimir o resultado na consola incluindo o tempo
-	public String getFormattedDuration() {
-		return String.format("Tempo de reflexão nesta jogada: %.2fs (%d ms)",
-				getDurationInSeconds(), durationMillis);
-	}
-
 }
