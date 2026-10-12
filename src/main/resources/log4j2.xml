@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <!-- Console Appender: Exibe logs no terminal -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+        </Console>
+
+        <!-- File Appender: (Opcional) Ativa logs em um arquivo -->
+        <File name="FileLogger" fileName="logs/application.log">
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+        </File>
+    </Appenders>
+
+    <Loggers>
+        <!-- Logger específico para o pacote battleship -->
+        <Logger name="battleship" level="debug" additivity="false">
+            <AppenderRef ref="Console" />
+            <AppenderRef ref="FileLogger" /> <!-- Para salvar logs em arquivo -->
+        </Logger>
+
+        <!-- Root logger usado para todos os logs que não têm logger específico -->
+        <Root level="info">
+            <AppenderRef ref="Console" />
+            <AppenderRef ref="FileLogger" />
+        </Root>
+    </Loggers>
+</Configuration>

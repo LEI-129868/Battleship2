@@ -1,0 +1,168 @@
+
+name: Repository Member Activity Report
+
+on:
+  workflow_dispatch:
+    inputs:
+      start:
+        description: "Start date (YYYY-MM-DD, inclusive)"
+        required: true
+        type: string
+      end:
+        description: "End date (YYYY-MM-DD, inclusive)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+jobs:
+  activity-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate activity report
+        uses: actions/github-script@v7
+        env:
+          START: ${{ inputs.start }}
+          END: ${{ inputs.end }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const start = process.env.START;
+            const end = process.env.END;
+
+            // Validate dates and create an inclusive UTC interval.
+            const validDate = s =>
+              /^\d{4}-\d{2}-\d{2}$/.test(s) &&
+              !Number.isNaN(Date.parse(s)) &&
+              new Date(s).toISOString().slice(0, 10) === s;
+
+            if (!validDate(start) || !validDate(end) || start > end) {
+              throw new Error(
+                "Invalid date interval. Use YYYY-MM-DD and ensure START <= END."
+              );
+            }
+
+            const since = `${start}T00:00:00Z`;
+            const until = `${end}T23:59:59Z`;
+
+            const members = await github.paginate(
+              github.rest.repos.listContributors,
+              { owner, repo, per_page: 100 }
+            );
+
+            const stats = new Map();
+
+            function person(login) {
+              if (!login) return null;
+              if (!stats.has(login)) {
+                stats.set(login, {
+                  login,
+                  commits: 0,
+                  prsOpened: 0,
+                  prsMerged: 0,
+                  issuesOpened: 0,
+                  issuesClosed: 0
+                });
+              }
+              return stats.get(login);
+            }
+
+            // Count commits authored by each contributor.
+            const commits = await github.paginate(
+              github.rest.repos.listCommits,
+              {
+                owner, repo, since, until, per_page: 100
+              }
+            );
+
+            for (const c of commits) {
+              const login = c.author?.login;
+              if (login) person(login).commits++;
+            }
+
+            // Include repository contributors even with zero activity.
+            for (const m of members) person(m.login);
+
+            // Pull requests: opened and merged in the interval.
+            const prs = await github.paginate(
+              github.rest.pulls.list,
+              {
+                owner, repo, state: "all",
+                sort: "created", direction: "desc",
+                per_page: 100
+              }
+            );
+
+            for (const pr of prs) {
+              if (pr.created_at >= since && pr.created_at <= until) {
+                const s = person(pr.user?.login);
+                if (s) s.prsOpened++;
+              }
+
+              if (pr.merged_at &&
+                  pr.merged_at >= since &&
+                  pr.merged_at <= until) {
+                const s = person(pr.user?.login);
+                if (s) s.prsMerged++;
+              }
+            }
+
+            // Issues: exclude pull requests, which are also issues in GitHub.
+            const issues = await github.paginate(
+              github.rest.issues.listForRepo,
+              {
+                owner, repo, state: "all",
+                since, per_page: 100
+              }
+            );
+
+            for (const issue of issues) {
+              if (issue.pull_request) continue;
+
+              const s = person(issue.user?.login);
+              if (!s) continue;
+
+              if (issue.created_at >= since &&
+                  issue.created_at <= until) {
+                s.issuesOpened++;
+              }
+
+              if (issue.closed_at &&
+                  issue.closed_at >= since &&
+                  issue.closed_at <= until) {
+                // Attribute closure to the issue's opener because
+                // GitHub's issue object does not identify the closer.
+                s.issuesClosed++;
+              }
+            }
+
+            const rows = [...stats.values()]
+              .sort((a, b) => a.login.localeCompare(b.login));
+
+            const table = [
+              "| Member | Commits | PRs opened | PRs merged | Issues opened | Issues closed* |",
+              "|---|---:|---:|---:|---:|---:|",
+              ...rows.map(s =>
+                `| @${s.login} | ${s.commits} | ${s.prsOpened} | ` +
+                `${s.prsMerged} | ${s.issuesOpened} | ${s.issuesClosed} |`
+              )
+            ].join("\n");
+
+            const report = [
+              `# Repository Activity Report: ${owner}/${repo}`,
+              "",
+              `**Period:** ${start} to ${end} (inclusive, UTC)`,
+              "",
+              table,
+              "",
+              "*Issues closed are attributed to their original opener, not necessarily the member who closed them.*",
+              "",
+              "Commit counts are based on GitHub's commit author association."
+            ].join("\n");
+
+            await core.summary.addRaw(report).write();
+            core.info("Activity report generated.");

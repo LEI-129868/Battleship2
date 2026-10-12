@@ -1,0 +1,15 @@
+{
+  "name": "Ambiente do FBA",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "jetbrains": {
+      "plugins": [
+        "Docker",
+        "org.jetbrains.plugins.github",
+        "org.intellij.plugins.markdown"
+      ]
+    }
+  }
+}
