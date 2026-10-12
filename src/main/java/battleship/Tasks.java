@@ -32,6 +32,8 @@ public class Tasks {
 	private static final String MAPA = "mapa";
 	private static final String STATUS = "estado";
 	private static final String SIMULA = "simula";
+	private static final String IDIOMA = "idioma";
+	private static final String LANG = "lang";
 
 	/**
 	 * This task also tests the fighting element of a round of three shots
@@ -45,7 +47,7 @@ public class Tasks {
 		System.out.print("> ");
 		Scanner in = new Scanner(System.in);
 		String command = in.next();
-		while (!command.equals(DESISTIR)) {
+		while (!command.equals(DESISTIR) && !command.equalsIgnoreCase("quit")) {
 
 			switch (command) {
 				case GERAFROTA:
@@ -101,33 +103,41 @@ public class Tasks {
 					if (game != null)
 						game.printMyBoard(true, true);
 					break;
-                case AJUDA:
-                    menuHelp();
-                    break;
+				case AJUDA:
+				case "help":
+					menuHelp();
+					break;
+				case IDIOMA:
+				case LANG:
+					String langArg = in.next();
+					I18n.setLocale(langArg);
+					System.out.println(I18n.get("menu.lang_changed", I18n.getLocale().getDisplayLanguage(I18n.getLocale())));
+					break;
 				default:
-					System.out.println("Que comando é esse??? Repete ...");
+					System.out.println(I18n.get("menu.unknown_command"));
 			}
 			System.out.print("> ");
 			command = in.next();
 		}
-		System.out.println(GOODBYE_MESSAGE);
+		System.out.println(I18n.get("menu.goodbye"));
 	}
 
 	/**
 	 * This function provides help information about the menu commands.
 	 */
 	public static void menuHelp() {
-		System.out.println("======================= AJUDA DO MENU =========================");
-		System.out.println("Digite um dos comandos abaixo para interagir com o jogo:");
-		System.out.println("- " + GERAFROTA + ": Gera uma frota aleatória de navios.");
-		System.out.println("- " + LEFROTA + ": Permite criar e carregar uma frota personalizada.");
-		System.out.println("- " + STATUS + ": Mostra o status atual da frota.)");
-		System.out.println("- " + MAPA + ": Exibe o mapa da frota.");
-		System.out.println("- " + RAJADA + ": Realiza uma rajada de disparos.");
-		System.out.println("- " + SIMULA + ": Simula um jogo completo.");
-		System.out.println("- " + TIROS + ": Lista os tiros válidos realizados (* = tiro em navio, o = tiro na água)");
-		System.out.println("- " + DESISTIR + ": Encerra o jogo.");
-		System.out.println("===============================================================");
+		System.out.println(I18n.get("menu.help.header"));
+		System.out.println(I18n.get("menu.help.instructions"));
+		System.out.println(I18n.get("menu.help.gerafrota", GERAFROTA));
+		System.out.println(I18n.get("menu.help.lefrota", LEFROTA));
+		System.out.println(I18n.get("menu.help.status", STATUS));
+		System.out.println(I18n.get("menu.help.mapa", MAPA));
+		System.out.println(I18n.get("menu.help.rajada", RAJADA));
+		System.out.println(I18n.get("menu.help.simula", SIMULA));
+		System.out.println(I18n.get("menu.help.tiros", TIROS));
+		System.out.println(I18n.get("menu.help.idioma", IDIOMA));
+		System.out.println(I18n.get("menu.help.desistir", DESISTIR));
+		System.out.println(I18n.get("menu.help.footer"));
 	}
 	/**
 	 * This operation allows the build up of a fleet, given user data
@@ -148,12 +158,12 @@ public class Tasks {
 				if (success)
 					i++;
 				else
-					LOGGER.info("Falha na criacao de {} {} {}", s.getCategory(), s.getBearing(), s.getPosition());
+					LOGGER.info(I18n.get("fleet.create.fail", s.getCategory(), s.getBearing(), s.getPosition()));
 			} else {
-				LOGGER.info("Navio desconhecido!");
+				LOGGER.info(I18n.get("fleet.create.unknown_ship"));
 			}
 		}
-		LOGGER.info("{} navios adicionados com sucesso!", i);
+		LOGGER.info(I18n.get("fleet.create.success", i));
 		return fleet;
 	}
 
@@ -198,7 +208,7 @@ public class Tasks {
 	public static IPosition readClassicPosition(@NotNull Scanner in) {
 		// Verifica se ainda há tokens disponíveis
 		if (!in.hasNext()) {
-			throw new IllegalArgumentException("Nenhuma posição válida encontrada!");
+			throw new IllegalArgumentException(I18n.get("fleet.pos.none"));
 		}
 
 		String part1 = in.next(); // Primeiro token
@@ -223,7 +233,7 @@ public class Tasks {
 			int row = Integer.parseInt(part2); // Extrair a linha
 			return new Position(column, row);
 		} else {
-			throw new IllegalArgumentException("Formato inválido. Use 'A3', 'A 3' ou similar.");
+			throw new IllegalArgumentException(I18n.get("fleet.pos.invalid"));
 		}
 	}
 
