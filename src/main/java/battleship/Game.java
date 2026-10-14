@@ -439,11 +439,14 @@ public class Game implements IGame
 	public void printMyBoard(boolean show_shots, boolean show_legend)
 	{
 		Game.printBoard(this.myFleet, this.alienMoves, show_shots, show_legend);
+		// Visualização gráfica do tabuleiro (requisito #<nº issue>)
+		BoardWindow.show("O meu tabuleiro", this.myFleet, this.alienMoves, show_shots);
 	}
 
 	public void printAlienBoard(boolean show_shots, boolean show_legend)
 	{
 		Game.printBoard(this.alienFleet, this.myMoves, show_shots, show_legend);
+		BoardWindow.show("Tabuleiro inimigo", this.alienFleet, this.myMoves, show_shots);
 	}
 
 	public void over() {
