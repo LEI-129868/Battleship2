@@ -6,6 +6,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+//Import de uma biblioteca maven
+import org.apache.commons.lang3.time.StopWatch;
+
 /**
  * The type Tasks.
  */
@@ -44,10 +47,17 @@ public class Tasks {
 		IGame game = null;
 		menuHelp();
 
+
+		// Inicia o cronómetro para medir o tempo até à primeira ação
+		StopWatch watch = StopWatch.createStarted();
+
 		System.out.print("> ");
 		Scanner in = new Scanner(System.in);
 		String command = in.next();
 		while (!command.equals(DESISTIR) && !command.equalsIgnoreCase("quit")) {
+
+			watch.stop();
+			long reflectionTimeMillis = watch.getTime();
 
 			switch (command) {
 				case GERAFROTA:
@@ -71,6 +81,11 @@ public class Tasks {
 				case RAJADA:
 					if (game != null) {
 						game.readEnemyFire(in);
+
+						// Imprime o tempo real que demoraste a pensar desde a jogada anterior
+						System.out.printf("Tempo de reflexão nesta jogada: %.2fs (%d ms)%n",
+								reflectionTimeMillis / 1000.0, reflectionTimeMillis);
+
 						myFleet.printStatus();
 						game.printMyBoard(true, false);
 
@@ -117,6 +132,8 @@ public class Tasks {
 					System.out.println(I18n.get("menu.unknown_command"));
 			}
 			System.out.print("> ");
+			watch.reset();
+			watch.start();
 			command = in.next();
 		}
 		System.out.println(I18n.get("menu.goodbye"));
