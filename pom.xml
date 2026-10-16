@@ -74,6 +74,8 @@
 		<allure.version>2.31.0</allure.version>
 
 		<jetbrains.annotations.version>26.1.0</jetbrains.annotations.version>
+
+		<icu4j.version>75.1</icu4j.version>
 	</properties>
 
 	<dependencies>
@@ -132,6 +134,13 @@
 			<artifactId>annotations</artifactId>
 			<version>${jetbrains.annotations.version}</version>
 			<scope>compile</scope>
+		</dependency>
+
+		<!-- ICU4J for Internationalization (i18n) and plural/localized formatting -->
+		<dependency>
+			<groupId>com.ibm.icu</groupId>
+			<artifactId>icu4j</artifactId>
+			<version>${icu4j.version}</version>
 		</dependency>
 	</dependencies>
 
