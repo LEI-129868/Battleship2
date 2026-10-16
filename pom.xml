@@ -74,6 +74,8 @@
 		<allure.version>2.31.0</allure.version>
 
 		<jetbrains.annotations.version>26.1.0</jetbrains.annotations.version>
+
+		<icu4j.version>75.1</icu4j.version>
 	</properties>
 
 	<dependencies>
@@ -138,6 +140,16 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 			<version>3.14.0</version>
+		<!-- Source: https://mvnrepository.com/artifact/com.formdev/flatlaf -->
+		<dependency>
+			<groupId>com.formdev</groupId>
+			<artifactId>flatlaf</artifactId>
+			<version>3.7.2</version>
+		<!-- ICU4J for Internationalization (i18n) and plural/localized formatting -->
+		<dependency>
+			<groupId>com.ibm.icu</groupId>
+			<artifactId>icu4j</artifactId>
+			<version>${icu4j.version}</version>
 		</dependency>
 	</dependencies>
 
@@ -167,7 +179,7 @@
 							<createDependencyReducedPom>false</createDependencyReducedPom>
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>restserver.BattleshipServer</mainClass>
+									<mainClass>battleship.Main</mainClass>
 								</transformer>
 							</transformers>
 						</configuration>
