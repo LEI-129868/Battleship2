@@ -77,9 +77,11 @@ public class Move implements IMove {
 
 		Map<String, Integer> sunkBoatsCount = new HashMap<>(); // Rastrear quantos navios de cada tipo afundaram
 		Map<String, Integer> hitsPerBoat = new HashMap<>();
+		Map<String, List<String>> cordsPerBoat = new HashMap<>();
 
 		// Processar cada resultado de tiro
-		for (IGame.ShotResult result : this.shotResults) {
+		for (int i = 0; i < this.shotResults.size(); i++) {
+			IGame.ShotResult result = this.shotResults.get(i);
 			if (!result.valid()) {
 				// Tiro inválido - apenas ignorar
 				continue;
@@ -92,11 +94,27 @@ public class Move implements IMove {
 				validShots++;
 				if (result.ship() == null)
 					missedShots++; // Tiro na água
-				else{
+				else {
 					String boatName = result.ship().getCategory();
-					hitsPerBoat.put(boatName, hitsPerBoat.getOrDefault(boatName, 0) + 1);
+
+					if (result.ship().stillFloating()) {
+						hitsPerBoat.put(
+								boatName, hitsPerBoat.getOrDefault(boatName, 0) + 1
+						);
+
+						IPosition shot = this.shots.get(i);
+						String cord = "" + shot.getClassicRow()
+								+ shot.getClassicColumn();
+
+						cordsPerBoat
+								.computeIfAbsent(boatName, key -> new ArrayList<>())
+								.add(cord);
+					}
+
 					if (result.sunk())
-						sunkBoatsCount.put(boatName, sunkBoatsCount.getOrDefault(boatName, 0) + 1); // Contar barcos do mesmo tipo afundados
+						sunkBoatsCount.put(
+								boatName, sunkBoatsCount.getOrDefault(boatName, 0) + 1
+						);
 				}
 			}
 		}
@@ -129,10 +147,9 @@ public class Move implements IMove {
 					for (Map.Entry<String, Integer> entry : hitsPerBoat.entrySet()) {
 						String boatName = entry.getKey();
 						int hits = entry.getValue();
-						if (!sunkBoatsCount.containsKey(boatName)) {
-							String localizedBoat = I18n.getShipCategory(boatName);
-							output.append(I18n.get("move.hit", hits, localizedBoat)).append(" + ");
-						}
+						String localizedBoat = I18n.getShipCategory(boatName);
+						output.append(I18n.get("move.hit", hits, localizedBoat)).append(" + ");
+
 					}
 				}
 
@@ -171,23 +188,31 @@ public class Move implements IMove {
 
 		// Criar a lista de barcos afundados
 		List<Map<String, Object>> sunkBoats = new ArrayList<>();
-		for (Map.Entry<String, Integer> entry : sunkBoatsCount.entrySet()) {
-			Map<String, Object> boat = new HashMap<>();
-			boat.put("type", entry.getKey());
-			boat.put("count", entry.getValue());
-			sunkBoats.add(boat);
+		for (IGame.ShotResult result : this.shotResults) {
+			if (result.valid() && !result.repeated()
+					&& result.ship() != null && result.sunk()) {
+
+				Map<String, Object> boat = new HashMap<>();
+				boat.put("type", result.ship().getCategory());
+				boat.put("count", 1);
+				boat.put("cords", result.ship().getPositions().stream()
+						.map(pos -> "" + pos.getClassicRow()
+								+ pos.getClassicColumn())
+						.toList());
+
+				sunkBoats.add(boat);
+			}
 		}
 		response.put("sunkBoats", sunkBoats);
 
 		// Criar a lista de acertos em barcos que não foram afundados
 		List<Map<String, Object>> boatHits = new ArrayList<>();
 		for (Map.Entry<String, Integer> entry : hitsPerBoat.entrySet()) {
-			if (!sunkBoatsCount.containsKey(entry.getKey())) {
-				Map<String, Object> boat = new HashMap<>();
-				boat.put("type", entry.getKey());
-				boat.put("hits", entry.getValue());
-				boatHits.add(boat);
-			}
+			Map<String, Object> boat = new HashMap<>();
+			boat.put("type", entry.getKey());
+			boat.put("hits", entry.getValue());
+			boat.put("cords", cordsPerBoat.get(entry.getKey()));
+			boatHits.add(boat);
 		}
 		response.put("hitsOnBoats", boatHits);
 
