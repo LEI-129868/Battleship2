@@ -9,18 +9,20 @@
 ---
 
 ## 📖 Table of Contents
-- [Project Overview](#-project-overview)
-- [Key Features](#-key-features)
-- [Technical Stack](#-technical-stack)
-- [Installation & Setup](#-installation--setup)
-- [Code Architecture](#-code-architecture)
-- [Roadmap](#-roadmap)
-- [Contributing](#-contributing)
+- [Project Overview](#project-overview)
+- [Key Features](#key-features)
+- [Technical Stack](#technical-stack)
+- [Installation & Setup](#installation-setup)
+- [Documentation](#documentation)
+- [Interação com o LLM](#interacao-com-llm)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
 
 ---
 
+<a id="project-overview"></a>
 ## 🎯 Project Overview
-This project serves as a template and reference for students learning **Object-Oriented Programming (OOP)** and **Software Quality**. It simulates a battleship environment where players must strategically place ships and sink the enemy fleet.
+This project serves as a template and reference for students learning **Object-Oriented Programming (OOP)** and **Software Quality**. It simulates a battleship environment where players must strategically place ships and attempt to sink enemy vessels.
 
 ### 🎮 The Rules
 The game is played on a grid (typically 10x10). The coordinate system is defined as:
@@ -31,6 +33,7 @@ Hits are calculated based on the intersection of the shot vector and the ship's 
 
 ---
 
+<a id="key-features"></a>
 ## ✨ Key Features
 | Feature | Description | Status |
 | :--- | :--- | :---: |
@@ -41,6 +44,7 @@ Hits are calculated based on the intersection of the shot vector and the ship's 
 
 ---
 
+<a id="technical-stack"></a>
 ## 🛠 Technical Stack
 * **Language:** Java 17
 * **Build Tool:** Maven / Gradle
@@ -49,6 +53,7 @@ Hits are calculated based on the intersection of the shot vector and the ship's 
 
 ---
 
+<a id="installation-setup"></a>
 ## 🚀 Installation & Setup
 
 ### Prerequisites
@@ -58,7 +63,7 @@ Hits are calculated based on the intersection of the shot vector and the ship's 
 ### Step-by-Step
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/britoeabreu/Battleship2.git](https://github.com/britoeabreu/Battleship2.git)
+   git clone https://github.com/britoeabreu/Battleship2.git
    ```
 2. **Navigate to directory:**
    ```bash
@@ -71,12 +76,12 @@ Hits are calculated based on the intersection of the shot vector and the ship's 
 
 ---
 
+<a id="documentation"></a>
 ## 📚 Documentation
 
 You can access the generated Javadoc here:
 
 👉 [Battleship2 API Documentation](https://britoeabreu.github.io/Battleship2/)
-
 
 ### Core Logic
 ```java
@@ -95,7 +100,6 @@ public class Ship {
 ### Design Patterns Used:
 - **Strategy Pattern:** For different AI difficulty levels.
 - **Observer Pattern:** To update the UI when a ship is hit.
-</details>
 
 ### Logic Flow
 ```mermaid
@@ -112,6 +116,7 @@ graph TD
 
 ---
 
+<a id="interacao-com-llm"></a>
 ## 🤖 Interação com o LLM
 
 ### Parte C — Treino do protocolo JSON
@@ -128,6 +133,7 @@ rajadas e resultados JSON produzidos pelo programa.
 
 ---
 
+<a id="roadmap"></a>
 ## 🗺 Roadmap
 - [x] Basic grid implementation
 - [x] Ship placement validation
@@ -148,6 +154,7 @@ mvn test
 
 ---
 
+<a id="contributing"></a>
 ## 🤝 Contributing
 Contributions are what make the open-source community such an amazing place to learn, inspire, and create.
 
