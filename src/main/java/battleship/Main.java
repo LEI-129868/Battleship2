@@ -12,7 +12,7 @@ public class Main
 	 */
 	public static void main(String[] args)
     {
-		System.out.println("***  Battleship  ***");
+		System.out.println(I18n.get("menu.title"));
 
 		Tasks.menu();
     }

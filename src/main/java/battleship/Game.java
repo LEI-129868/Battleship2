@@ -41,9 +41,9 @@ public class Game implements IGame
 		printBoardFrame(map);
 
 		if (showLegend) {
-			System.out.println("          LEGENDA");
-			System.out.println("'" + SHIP_MARKER + "'->navio, '" + SHIP_ADJACENT_MARKER + "'->adjacente a navio, '" + EMPTY_MARKER + "'->água");
-			System.out.println("'" + SHOT_SHIP_MARKER + "'->Tiro certeiro, '" + SHOT_WATER_MARKER + "'->Tiro na água");
+			System.out.println(I18n.get("board.legend.header"));
+			System.out.println(I18n.get("board.legend.line1", SHIP_MARKER, SHIP_ADJACENT_MARKER, EMPTY_MARKER));
+			System.out.println(I18n.get("board.legend.line2", SHOT_SHIP_MARKER, SHOT_WATER_MARKER));
 		}
 		System.out.println();
 	}
@@ -257,7 +257,7 @@ public class Game implements IGame
 				shots.add(newShot);
 		}
 
-		System.out.print("rajada ");
+		System.out.print(I18n.get("game.volley.prefix"));
 		for (IPosition shot : shots)
 			System.out.print(shot + " ");
 		System.out.println();
@@ -301,7 +301,7 @@ public class Game implements IGame
 					int row = inputScanner.nextInt();
 					shots.add(new Position(token.toUpperCase().charAt(0), row));
 				} else {
-					throw new IllegalArgumentException("Posição incompleta! A coluna '" + token + "' não é seguida por uma linha.");
+					throw new IllegalArgumentException(I18n.get("game.err.incomplete_pos", token));
 				}
 			} else {
 				// Caso o token já contenha a coluna e a linha juntas (ex.: "A3")
@@ -311,7 +311,7 @@ public class Game implements IGame
 		}
 
 		if (shots.size() != NUMBER_SHOTS) {
-			throw new IllegalArgumentException("Você deve inserir exatamente " + NUMBER_SHOTS + " posições!");
+			throw new IllegalArgumentException(I18n.get("game.err.exact_shots", NUMBER_SHOTS));
 		}
 
 		this.fireShots(shots);
@@ -337,7 +337,7 @@ public class Game implements IGame
 
 		List<ShotResult> shotResults = new ArrayList<ShotResult>();
 		if (shots.size() != NUMBER_SHOTS) {
-			throw new IllegalArgumentException("Must fire exactly " + NUMBER_SHOTS + " shots per move.");
+			throw new IllegalArgumentException(I18n.get("game.err.must_fire_exact", NUMBER_SHOTS));
 		}
 
 		List<IPosition> alreadyShot = new ArrayList<IPosition>();
@@ -446,17 +446,20 @@ public class Game implements IGame
 	public void printMyBoard(boolean show_shots, boolean show_legend)
 	{
 		Game.printBoard(this.myFleet, this.alienMoves, show_shots, show_legend);
+		// Visualização gráfica do tabuleiro (requisito #<nº issue>)
+		BoardWindow.show("O meu tabuleiro", this.myFleet, this.alienMoves, show_shots);
 	}
 
 	public void printAlienBoard(boolean show_shots, boolean show_legend)
 	{
 		Game.printBoard(this.alienFleet, this.myMoves, show_shots, show_legend);
+		BoardWindow.show("Tabuleiro inimigo", this.alienFleet, this.myMoves, show_shots);
 	}
 
 	public void over() {
 			System.out.println();
-			System.out.println("+--------------------------------------------------------------+");
-			System.out.println("| Maldito sejas, Java Sparrow, eu voltarei, glub glub glub ... |");
-			System.out.println("+--------------------------------------------------------------+");
+			System.out.println(I18n.get("game.over.line1"));
+			System.out.println(I18n.get("game.over.line2"));
+			System.out.println(I18n.get("game.over.line3"));
 	}
 }
