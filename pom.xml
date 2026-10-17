@@ -140,11 +140,15 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 			<version>3.14.0</version>
+		</dependency>
+
 		<!-- Source: https://mvnrepository.com/artifact/com.formdev/flatlaf -->
 		<dependency>
 			<groupId>com.formdev</groupId>
 			<artifactId>flatlaf</artifactId>
 			<version>3.7.2</version>
+		</dependency>
+
 		<!-- ICU4J for Internationalization (i18n) and plural/localized formatting -->
 		<dependency>
 			<groupId>com.ibm.icu</groupId>
