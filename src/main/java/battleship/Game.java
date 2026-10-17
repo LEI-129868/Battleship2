@@ -139,9 +139,6 @@ public class Game implements IGame
 			throw new RuntimeException("Erro ao serializar o JSON", e);
 		}
 
-		System.out.println(jsonString);
-		System.out.println();
-
 		// Retornar o JSON
 		return jsonString;
 	}
