@@ -350,9 +350,16 @@ public class Game implements IGame
 
 //		System.out.println(move);
 
-		move.processEnemyFire(true);
+		//json formatted text of the result of the shots
+		String jSonResponse = move.processEnemyFire(true);
 
 		alienMoves.add(move);
+
+		//json formatted text of the shots fired
+		String jsonShots = Game.jsonShots(shots);
+
+		//registar histórico de jogadas
+		GameLogger.logMove(moveNumber, jsonShots, jSonResponse);
 
 		moveNumber++;
 	}
