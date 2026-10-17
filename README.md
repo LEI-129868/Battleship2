@@ -112,6 +112,22 @@ graph TD
 
 ---
 
+## 🤖 Interação com o LLM
+
+### Parte C — Treino do protocolo JSON
+
+- LLM utilizado: ChatGPT | modelo GPT-6.1 Sol
+- [Consultar a conversa de treino](https://chatgpt.com/share/6ad39d01-03f4-83eb-9d64-2b5de8f1fff1)
+
+A conversa apresenta as instruções, os exemplos e a troca de
+rajadas e resultados JSON produzidos pelo programa.
+
+### Parte D — Estratégia de jogo
+
+[A preencher com o prompt final da estratégia.]
+
+---
+
 ## 🗺 Roadmap
 - [x] Basic grid implementation
 - [x] Ship placement validation
