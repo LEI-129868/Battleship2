@@ -129,7 +129,11 @@ rajadas e resultados JSON produzidos pelo programa.
 
 ### Parte D — Estratégia de jogo
 
-[A preencher com o prompt final da estratégia.]
+Prompt final para o jogo da Batalha Naval
+
+[ESpromptAI.txt](https://github.com/user-attachments/files/33641554/ESpromptAI.txt)
+
+
 
 ---
 
