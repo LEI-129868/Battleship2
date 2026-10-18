@@ -8,7 +8,8 @@ public class GameLogger {
     private static final String LOG_FILE = "historico_jogadas.txt";
 
     public static void logMove(int turn, String shotsData, String resultData) {
-        try (FileWriter fw = new FileWriter(LOG_FILE, true);
+        boolean appendMode = (turn > 1);
+        try (FileWriter fw = new FileWriter(LOG_FILE, appendMode);
              PrintWriter pw = new PrintWriter(fw)) {
             pw.println("--- Jogada " + turn + " ---");
             pw.println("Shots: " + shotsData);

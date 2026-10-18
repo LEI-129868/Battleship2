@@ -41,3 +41,43 @@ Result: {
   "missedShots" : 2
 }
 
+--- Jogada 1 ---
+Shots: [ {
+  "row" : "C",
+  "column" : 4
+}, {
+  "row" : "C",
+  "column" : 5
+}, {
+  "row" : "C",
+  "column" : 6
+} ]
+Result: {
+  "validShots" : 3,
+  "sunkBoats" : [ ],
+  "repeatedShots" : 0,
+  "outsideShots" : 0,
+  "hitsOnBoats" : [ ],
+  "missedShots" : 3
+}
+
+--- Jogada 1 ---
+Shots: [ {
+  "row" : "C",
+  "column" : 4
+}, {
+  "row" : "C",
+  "column" : 5
+}, {
+  "row" : "C",
+  "column" : 6
+} ]
+Result: {
+  "validShots" : 3,
+  "sunkBoats" : [ ],
+  "repeatedShots" : 0,
+  "outsideShots" : 0,
+  "hitsOnBoats" : [ ],
+  "missedShots" : 3
+}
+
