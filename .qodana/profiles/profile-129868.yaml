@@ -1,6 +1,8 @@
+# LEI-129868 - Francisco Silva
+
 profile:
   base:
-    path: profile-129868-base.xml
+    name: Default
 
   inspections:
     - group: ALL
