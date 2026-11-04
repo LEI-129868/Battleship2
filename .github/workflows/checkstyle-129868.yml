@@ -1,0 +1,35 @@
+# LEI-129868 - Francisco Silva
+
+name: Checkstyle - LEI-129868 - MethodName
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: read
+
+jobs:
+  checkstyle-129868:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Obter o codigo
+        uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Run java checkstyle
+        uses: nikitasavinov/checkstyle-action@1.0.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          checkstyle_config: checkstyle-129868.xml
+          checkstyle_version: '14.4.0'
+          workdir: src
+          reporter: github-pr-check
+          level: error
+          filter_mode: nofilter
+          fail_level: error
+          tool_name: checkstyle-report-129868
