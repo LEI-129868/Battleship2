@@ -8,4 +8,4 @@ imports:
 
 failureConditions:
   severityThresholds:
-    any: 3
+    any: 0
