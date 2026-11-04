@@ -41,7 +41,7 @@ public class BoardWindow extends JFrame {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
         add(boardPanel, BorderLayout.CENTER);
-        add(BuildLegend(), BorderLayout.SOUTH);
+        add(buildLegend(), BorderLayout.SOUTH);
         setResizable(false);
         setLocationByPlatform(true);
     }
@@ -135,7 +135,7 @@ public class BoardWindow extends JFrame {
         };
     }
 
-    private static JPanel BuildLegend() {
+    private static JPanel buildLegend() {
         JPanel legend = new JPanel(new GridLayout(2, 3, 12, 4));
         legend.setBorder(BorderFactory.createEmptyBorder(4, 12, 10, 12));
         legend.add(swatch(C_WATER, "Água"));
