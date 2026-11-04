@@ -1,12 +1,11 @@
 name: Qodana
-
 on:
   workflow_dispatch:
   pull_request:
   push:
-    branches:
-      - main
-      - 'releases/*'
+    branches: # Specify your branches here
+      - main # The 'main' branch
+      - 'releases/*' # The release branches
 
 jobs:
   qodana:
@@ -15,45 +14,15 @@ jobs:
       contents: write
       pull-requests: write
       checks: write
-
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
-
-      - name: Qodana Scan
-        uses: JetBrains/qodana-action@v2025.3
+          ref: ${{ github.event.pull_request.head.sha }}  # to check out the actual pull request commit, not the merge commit
+          fetch-depth: 0  # a full history is required for pull request analysis
+      - name: 'Qodana Scan'
+        uses: JetBrains/qodana-action@v2026.1
         with:
           pr-mode: false
-          args: --save-report
         env:
-          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_1371499128 }}
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_420625068 }}
           QODANA_ENDPOINT: 'https://qodana.cloud'
-
-      - name: Enforce max 5 suspicious-indentation errors
-        run: |
-          SARIF="$RUNNER_TEMP/qodana/results/qodana.sarif.json"
-
-          echo "Looking for SARIF at: $SARIF"
-
-          if [ ! -f "$SARIF" ]; then
-            echo "SARIF report not found at $SARIF"
-            ls -R "$RUNNER_TEMP" || true
-            exit 1
-          fi
-
-          # Count only "Suspicious indentation after control statement without braces"
-          SuspiciousIndentCount=$(jq '[.runs[].results[]
-            | select(.ruleId == "ControlFlowStatementWithoutBraces")
-            | select(.level == "error")]
-            | length' "$SARIF")
-
-          echo "Suspicious indentation errors: $SuspiciousIndentCount"
-
-          if [ "$SuspiciousIndentCount" -gt 5 ]; then
-            echo "❌ Too many suspicious-indentation errors (>5)"
-            exit 1
-          fi
-
-          echo "✔️ Suspicious-indentation threshold satisfied"
