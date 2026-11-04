@@ -1,0 +1,34 @@
+name: Qodana - LEI-129868 - Duplicated Code
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  duplicated-code:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      checks: write
+
+    steps:
+      - name: Obter o codigo
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Analisar duplicacao
+        uses: JetBrains/qodana-action@v2026.2.2
+        with:
+          args: --config qodana-129868.yaml
+          pr-mode: false
+          post-pr-comment: false
+          upload-result: true
+          artifact-name: qodana-129868-duplicated-code
+        env:
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_420625068 }}

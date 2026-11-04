@@ -1,0 +1,15 @@
+profile:
+  base:
+    path: .qodana/profiles/profile-129868-base.xml
+
+  inspections:
+    - group: ALL
+      enabled: false
+
+    - inspection: DuplicatedCode
+      enabled: true
+      severity: ERROR
+      ignore:
+        - "!src/**/*.java"
+      options:
+        restrictedDuplicateScope: Everywhere
