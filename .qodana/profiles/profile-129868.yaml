@@ -1,6 +1,6 @@
 profile:
   base:
-    path: .qodana/profiles/profile-129868-base.xml
+    path: profile-129868-base.xml
 
   inspections:
     - group: ALL
