@@ -121,6 +121,70 @@ public class BoardWindow extends JFrame {
         return map;
     }
 
+    private static CellState[][] buildMap1(IFleet fleet, List<IMove> moves, boolean showShots) {
+        CellState[][] map = newMap();
+
+        // 1. Navios e "halo" de água à volta dos navios afundados
+        for (IShip ship : fleet.getShips()) {
+            for (IPosition p : ship.getPositions())
+                map[p.getRow()][p.getColumn()] = CellState.SHIP;
+            if (!ship.stillFloating())
+                for (IPosition adj : ship.getAdjacentPositions())
+                    map[adj.getRow()][adj.getColumn()] = CellState.SUNK_HALO;
+        }
+
+        if (showShots) {
+            // 2. Tiros: acertos em navios ou na água
+            for (IMove move : moves)
+                for (IPosition shot : move.getShots())
+                    if (shot.isInside()) {
+                        CellState current = map[shot.getRow()][shot.getColumn()];
+                        if (current == CellState.SHIP)
+                            map[shot.getRow()][shot.getColumn()] = CellState.SHIP_HIT;
+                        else if (current == CellState.WATER || current == CellState.SUNK_HALO)
+                            map[shot.getRow()][shot.getColumn()] = CellState.SHOT_WATER;
+                    }
+
+            // 3. Navios afundados destacados dos apenas atingidos
+            for (IShip ship : fleet.getSunkShips())
+                for (IPosition p : ship.getPositions())
+                    map[p.getRow()][p.getColumn()] = CellState.SHIP_SUNK;
+        }
+        return map;
+    }
+
+    private static CellState[][] buildMap2(IFleet fleet, List<IMove> moves, boolean showShots) {
+        CellState[][] map = newMap();
+
+        // 1. Navios e "halo" de água à volta dos navios afundados
+        for (IShip ship : fleet.getShips()) {
+            for (IPosition p : ship.getPositions())
+                map[p.getRow()][p.getColumn()] = CellState.SHIP;
+            if (!ship.stillFloating())
+                for (IPosition adj : ship.getAdjacentPositions())
+                    map[adj.getRow()][adj.getColumn()] = CellState.SUNK_HALO;
+        }
+
+        if (showShots) {
+            // 2. Tiros: acertos em navios ou na água
+            for (IMove move : moves)
+                for (IPosition shot : move.getShots())
+                    if (shot.isInside()) {
+                        CellState current = map[shot.getRow()][shot.getColumn()];
+                        if (current == CellState.SHIP)
+                            map[shot.getRow()][shot.getColumn()] = CellState.SHIP_HIT;
+                        else if (current == CellState.WATER || current == CellState.SUNK_HALO)
+                            map[shot.getRow()][shot.getColumn()] = CellState.SHOT_WATER;
+                    }
+
+            // 3. Navios afundados destacados dos apenas atingidos
+            for (IShip ship : fleet.getSunkShips())
+                for (IPosition p : ship.getPositions())
+                    map[p.getRow()][p.getColumn()] = CellState.SHIP_SUNK;
+        }
+        return map;
+    }
+
     // ------------------------------------------------------------------
     // Componentes visuais
     // ------------------------------------------------------------------
