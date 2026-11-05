@@ -1,32 +1,38 @@
 
 # 129836 - Tomás Costa
-name: Qodana - Long Method - 129836
+
+name: Qodana - 129836 - Long Method
 
 on:
+  workflow_dispatch:
   pull_request:
+    branches: [main]
   push:
     branches: [main]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  checks: write
-  pull-requests: write
 
 jobs:
-  qodana-long-method:
+  long-method:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      checks: write
+
     steps:
-      - name: Checkout repository
+      - name: Obter o codigo
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
 
-      - name: Qodana Long Method Analysis
-        uses: JetBrains/qodana-action@v2026.2
+      - name: Analisar Long Method
+        uses: JetBrains/qodana-action@v2026.2.2
         with:
-          args: --config qodana-12345.yaml
-          use-annotations: true
-          post-pr-comment: true
+          args: --config qodana-129836.yaml
+          pr-mode: false
+          post-pr-comment: false
           upload-result: true
+          artifact-name: qodana-129836-long-method
+        env:
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_420625068 }}
+

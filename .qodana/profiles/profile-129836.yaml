@@ -1,11 +1,18 @@
 
 # 129836 - Tomás Costa
+
 profile:
   base:
-    name: empty
+    name: Default
+
   inspections:
+    - group: ALL
+      enabled: false
+
     - inspection: NonCommentSourceStatements
       enabled: true
+      severity: ERROR
 
     - inspection: CyclomaticComplexity
       enabled: true
+      severity: ERROR
