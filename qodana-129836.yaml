@@ -1,0 +1,13 @@
+
+# 129836 Tomás Costa
+version: "1.0"
+
+linter: jetbrains/qodana-jvm:2026.2
+projectJDK: "21"
+
+imports:
+  - .qodana/profiles/profile-129836.yaml
+
+failureConditions:
+  severityThresholds:
+    any: 9
