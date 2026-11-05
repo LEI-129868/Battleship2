@@ -40,46 +40,4 @@ public class Caravel extends Ship {
 	}
 
 
-	public void testeLongMethod129836() {
-		int resultado = 0;
-
-		resultado += 1;
-		resultado += 2;
-		resultado += 3;
-		resultado += 4;
-		resultado += 5;
-		resultado += 6;
-		resultado += 7;
-		resultado += 8;
-		resultado += 9;
-		resultado += 10;
-		resultado += 11;
-		resultado += 12;
-		resultado += 13;
-		resultado += 14;
-		resultado += 15;
-		resultado += 16;
-		resultado += 17;
-		resultado += 18;
-		resultado += 19;
-		resultado += 20;
-		resultado += 21;
-		resultado += 22;
-		resultado += 23;
-		resultado += 24;
-		resultado += 25;
-		resultado += 26;
-		resultado += 27;
-		resultado += 28;
-		resultado += 29;
-		resultado += 30;
-		resultado += 31;
-		resultado += 32;
-		resultado += 33;
-		resultado += 34;
-		resultado += 35;
-
-		System.out.println(resultado);
-	}
-
 }
