@@ -1,0 +1,11 @@
+
+# 129836 - Tomás Costa
+profile:
+  base:
+    name: empty
+  inspections:
+    - inspection: NonCommentSourceStatements
+      enabled: true
+
+    - inspection: CyclomaticComplexity
+      enabled: true
