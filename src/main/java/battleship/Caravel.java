@@ -38,4 +38,8 @@ public class Caravel extends Ship {
 				break;
 		}
 	}
+
+	public void testeParametro129836(int ParametroErrado129836) {
+		System.out.println(ParametroErrado129836);
+	}
 }

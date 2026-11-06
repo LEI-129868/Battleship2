@@ -1,0 +1,31 @@
+
+# 129836 - Tomás Costa
+name: Checkstyle - 129836 - ParameterName
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  checkstyle-129836:
+    name: checkstyle-129836
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkstyle ParameterName
+        uses: dbelyaev/action-checkstyle@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          checkstyle_config: checkstyle-129836.xml
+          reporter: github-pr-check
+          level: error
+          filter_mode: added
+          fail_level: error
+
