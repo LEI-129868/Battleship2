@@ -1,0 +1,13 @@
+# LEI-129822 - Ricardo Paiva
+
+version: "1.0"
+
+linter: jetbrains/qodana-jvm:2026.2
+projectJDK: "21"
+
+imports:
+  - .qodana/profiles/profile-129822.yaml
+
+failureConditions:
+  severityThresholds:
+    any: 0
