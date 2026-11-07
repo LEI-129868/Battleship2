@@ -8,7 +8,7 @@ profile:
     - group: ALL
       enabled: false
 
-    - inspection: MethodWithTooManyParameters
+    - inspection: ParametersPerMethod
       enabled: true
       severity: ERROR
       options:
