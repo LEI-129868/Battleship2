@@ -1,0 +1,30 @@
+# LEI-129822 - Ricardo Paiva
+name: Checkstyle - 129822 - ConstantName
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  checkstyle-129822:
+    name: checkstyle-129822
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkstyle ConstantName
+        uses: dbelyaev/action-checkstyle@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          checkstyle_config: checkstyle-129822.xml
+          reporter: github-pr-check
+          level: error
+          filter_mode: added
+          fail_level: error
+
