@@ -1,0 +1,12 @@
+# LEI-129822 - Ricardo Paiva
+
+profile:
+  base:
+    name: empty
+
+  inspections:
+    - inspection: MethodWithTooManyParameters
+      enabled: true
+      severity: ERROR
+      options:
+        m_limit: 5
