@@ -15,4 +15,6 @@ public class Main {
 		Tasks.menu();
 	}
 
+	public static final int maxShips = 10;
+
 }
