@@ -2,9 +2,12 @@
 
 profile:
   base:
-    name: empty
+    name: Default
 
   inspections:
+    - group: ALL
+      enabled: false
+
     - inspection: MethodWithTooManyParameters
       enabled: true
       severity: ERROR
