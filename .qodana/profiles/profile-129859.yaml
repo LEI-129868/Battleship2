@@ -7,10 +7,12 @@ profile:
     - group: ALL
       enabled: false
 
-    - inspection: DataClass
+    - inspection: MethodCount
       enabled: true
       severity: ERROR
       ignore:
         - "!src/**/*.java"
       options:
-        maxGettersSetters: 4
+        m_limit: 30
+        ignoreGettersAndSetters: false
+        ignoreOverridingMethods: false
