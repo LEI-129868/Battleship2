@@ -1,9 +1,16 @@
 # 129859 - Daniel Silva
 profile:
   base:
-    name: empty
+    name: Default
+
   inspections:
+    - group: ALL
+      enabled: false
+
     - inspection: DataClass
       enabled: true
+      severity: ERROR
+      ignore:
+        - "!src/**/*.java"
       options:
         maxGettersSetters: 4
