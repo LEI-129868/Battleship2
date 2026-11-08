@@ -1,9 +1,12 @@
 # 129859 - Daniel Silva
 version: "1.0"
+
 linter: jetbrains/qodana-jvm:2026.2
 projectJDK: "21"
-profile:
-  path: .qodana/profiles/profile-129859.yaml
+
+imports:
+  - .qodana/profiles/profile-129859.yaml
+
 failureConditions:
   severityThresholds:
     any: 0
