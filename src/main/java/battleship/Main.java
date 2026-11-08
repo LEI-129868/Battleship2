@@ -4,6 +4,9 @@
 package battleship;
 
 public class Main {
+
+	private int Total_Tiros = 0;
+
 	/**
 	 * Main.
 	 *
