@@ -26,3 +26,5 @@ jobs:
           args: --config qodana-129859.yaml
           use-annotations: true
           post-pr-comment: true
+        env:
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
