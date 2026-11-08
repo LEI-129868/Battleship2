@@ -1,0 +1,9 @@
+# 129859 - Daniel Silva
+profile:
+  base:
+    name: empty
+  inspections:
+    - inspection: DataClass
+      enabled: true
+      options:
+        maxGettersSetters: 4
