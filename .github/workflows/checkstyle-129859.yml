@@ -27,4 +27,4 @@ jobs:
           level: error
           filter_mode: added
           fail_level: error
-          tool_name: checkstyle-report-129859
+          reviewdog_flags: -name=checkstyle-report-129859
