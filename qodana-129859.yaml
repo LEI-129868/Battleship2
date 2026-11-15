@@ -1,11 +1,18 @@
 # 129859 - Daniel Silva
 version: "1.0"
 
-linter: jetbrains/qodana-jvm:2026.2
+linter: jetbrains/qodana-jvm-community:2026.2
 projectJDK: "21"
 
 imports:
   - .qodana/profiles/profile-129859.yaml
+
+# Large Class aplica-se ao código de produção; as classes de teste
+# têm naturalmente um método por caso de teste.
+exclude:
+  - name: MethodCount
+    paths:
+      - src/test
 
 failureConditions:
   severityThresholds:
