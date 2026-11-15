@@ -22,7 +22,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run java checkstyle
-        uses: nikitasavinov/checkstyle-action@1.0.0
+        uses: dbelyaev/action-checkstyle@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           checkstyle_config: checkstyle-129868.xml
