@@ -32,4 +32,4 @@ jobs:
           level: error
           filter_mode: nofilter
           fail_level: error
-          tool_name: checkstyle-report-129868
+          reviewdog_flags: -name=checkstyle-report-129868
