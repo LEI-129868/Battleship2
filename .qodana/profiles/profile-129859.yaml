@@ -11,7 +11,7 @@ profile:
       enabled: true
       severity: ERROR
       ignore:
-        - "!src/main/**/*.java"
+        - "!src/**/*.java"
       options:
         m_limit: 30
         ignoreGettersAndSetters: false
