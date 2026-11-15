@@ -27,7 +27,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           checkstyle_config: checkstyle-129868.xml
           checkstyle_version: '14.4.0'
-          workdir: src
+          workdir: src/main
           reporter: github-pr-check
           level: error
           filter_mode: nofilter

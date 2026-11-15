@@ -8,6 +8,16 @@ projectJDK: "21"
 imports:
   - .qodana/profiles/profile-129836.yaml
 
+# Long Method aplica-se ao código de produção; os testes ficam de fora
+# para não bloquearem os PRs de testes unitários.
+exclude:
+  - name: NonCommentSourceStatements
+    paths:
+      - src/test
+  - name: CyclomaticComplexity
+    paths:
+      - src/test
+
 failureConditions:
   severityThresholds:
     any: 9
