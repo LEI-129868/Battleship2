@@ -31,8 +31,7 @@ jobs:
           args: --config qodana-129836.yaml
           pr-mode: false
           post-pr-comment: false
-          upload-result: true
+          upload-result: false
           artifact-name: qodana-129836-long-method
-        env:
-          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_420625068 }}
+
 
