@@ -1,0 +1,249 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > I18n</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">battleship</a>
+</div>
+
+<h1>Coverage Summary for Class: I18n (battleship)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">I18n</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (8/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    55.6%
+  </span>
+  <span class="absValue">
+    (15/27)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    82.9%
+  </span>
+  <span class="absValue">
+    (34/41)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package battleship;
+&nbsp;
+&nbsp;import com.ibm.icu.text.MessageFormat;
+&nbsp;import com.ibm.icu.util.ULocale;
+&nbsp;
+&nbsp;import java.util.Locale;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.MissingResourceException;
+&nbsp;import java.util.ResourceBundle;
+&nbsp;import java.util.concurrent.ConcurrentHashMap;
+&nbsp;
+&nbsp;/**
+&nbsp; * Service for internationalization (i18n) of game messages using ICU4J.
+&nbsp; */
+&nbsp;public final class I18n {
+&nbsp;
+<b class="fc">&nbsp;    public static final Locale PORTUGUESE = Locale.of(&quot;pt&quot;, &quot;PT&quot;);</b>
+<b class="fc">&nbsp;    public static final Locale ENGLISH = Locale.of(&quot;en&quot;, &quot;US&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;    private static Locale currentLocale = PORTUGUESE;</b>
+&nbsp;    private static ResourceBundle currentBundle;
+<b class="fc">&nbsp;    private static final Map&lt;String, MessageFormat&gt; formatCache = new ConcurrentHashMap&lt;&gt;();</b>
+&nbsp;
+&nbsp;    static {
+<b class="fc">&nbsp;        loadBundle();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private I18n() {
+&nbsp;        // utility class
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Updates the active locale and reloads the resource bundle.
+&nbsp;     *
+&nbsp;     * @param locale the target locale
+&nbsp;     */
+&nbsp;    public static synchronized void setLocale(Locale locale) {
+<b class="pc">&nbsp;        if (locale == null) {</b>
+<b class="nc">&nbsp;            locale = PORTUGUESE;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        currentLocale = locale;</b>
+<b class="fc">&nbsp;        formatCache.clear();</b>
+<b class="fc">&nbsp;        loadBundle();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Updates the active locale based on language code string (e.g. &quot;pt&quot;, &quot;en&quot;).
+&nbsp;     *
+&nbsp;     * @param langCode the language code
+&nbsp;     */
+&nbsp;    public static void setLocale(String langCode) {
+<b class="pc">&nbsp;        if (langCode == null || langCode.isBlank()) {</b>
+<b class="nc">&nbsp;            setLocale(PORTUGUESE);</b>
+&nbsp;            return;
+&nbsp;        }
+<b class="fc">&nbsp;        String normalized = langCode.trim().toLowerCase();</b>
+<b class="fc">&nbsp;        if (normalized.startsWith(&quot;en&quot;)) {</b>
+<b class="fc">&nbsp;            setLocale(ENGLISH);</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            setLocale(PORTUGUESE);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the active locale.
+&nbsp;     *
+&nbsp;     * @return current locale
+&nbsp;     */
+&nbsp;    public static Locale getLocale() {
+<b class="fc">&nbsp;        return currentLocale;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void loadBundle() {
+&nbsp;        try {
+<b class="fc">&nbsp;            currentBundle = ResourceBundle.getBundle(&quot;messages&quot;, currentLocale);</b>
+&nbsp;        } catch (MissingResourceException e) {
+<b class="nc">&nbsp;            currentBundle = ResourceBundle.getBundle(&quot;messages&quot;, Locale.ROOT);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Retrieves the localized string for a key, applying arguments formatting using ICU4J MessageFormat.
+&nbsp;     *
+&nbsp;     * @param key  the message key in properties
+&nbsp;     * @param args the arguments for the pattern
+&nbsp;     * @return the localized and formatted string
+&nbsp;     */
+&nbsp;    public static String get(String key, Object... args) {
+<b class="pc">&nbsp;        if (currentBundle == null) {</b>
+<b class="nc">&nbsp;            loadBundle();</b>
+&nbsp;        }
+&nbsp;        String pattern;
+&nbsp;        try {
+<b class="fc">&nbsp;            pattern = currentBundle.getString(key);</b>
+&nbsp;        } catch (MissingResourceException e) {
+<b class="fc">&nbsp;            return &quot;!&quot; + key + &quot;!&quot;;</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (args == null || args.length == 0) {</b>
+<b class="fc">&nbsp;            return pattern;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        ULocale uLocale = ULocale.forLocale(currentLocale);</b>
+<b class="fc">&nbsp;        MessageFormat formatter = formatCache.computeIfAbsent(</b>
+<b class="fc">&nbsp;                currentLocale.toLanguageTag() + &quot;:&quot; + pattern,</b>
+<b class="fc">&nbsp;                k -&gt; new MessageFormat(pattern, uLocale)</b>
+&nbsp;        );
+&nbsp;
+<b class="fc">&nbsp;        synchronized (formatter) {</b>
+<b class="fc">&nbsp;            return formatter.format(args);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the localized name of a ship category.
+&nbsp;     *
+&nbsp;     * @param category the ship category code/name
+&nbsp;     * @return localized ship category name
+&nbsp;     */
+&nbsp;    public static String getShipCategory(String category) {
+<b class="pc">&nbsp;        if (category == null) {</b>
+<b class="nc">&nbsp;            return &quot;&quot;;</b>
+&nbsp;        }
+<b class="pc">&nbsp;        return switch (category.toLowerCase()) {</b>
+<b class="fc">&nbsp;            case &quot;barca&quot;, &quot;barge&quot; -&gt; get(&quot;ship.barge&quot;);</b>
+<b class="fc">&nbsp;            case &quot;caravela&quot;, &quot;caravel&quot; -&gt; get(&quot;ship.caravel&quot;);</b>
+<b class="fc">&nbsp;            case &quot;nau&quot;, &quot;carrack&quot; -&gt; get(&quot;ship.carrack&quot;);</b>
+<b class="fc">&nbsp;            case &quot;fragata&quot;, &quot;frigate&quot; -&gt; get(&quot;ship.frigate&quot;);</b>
+<b class="fc">&nbsp;            case &quot;galeao&quot;, &quot;galeão&quot;, &quot;galleon&quot; -&gt; get(&quot;ship.galleon&quot;);</b>
+<b class="nc">&nbsp;            default -&gt; category;</b>
+&nbsp;        };
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-11-15 18:28</div>
+</div>
+</body>
+</html>
