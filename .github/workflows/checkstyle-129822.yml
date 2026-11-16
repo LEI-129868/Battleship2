@@ -8,6 +8,7 @@ on:
 permissions:
   contents: read
   checks: write
+  pull-requests: read
 
 jobs:
   checkstyle-129822:
@@ -17,6 +18,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Checkstyle ConstantName
         uses: dbelyaev/action-checkstyle@v3

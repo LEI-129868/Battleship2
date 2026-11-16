@@ -1,7 +1,7 @@
 # ⚓ Battleship 2.0
 
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
-![Java Version](https://img.shields.io/badge/Java-17%2B-blue)
+[![Java CI with Maven](https://github.com/LEI-129868/Battleship2/actions/workflows/maven.yml/badge.svg)](https://github.com/LEI-129868/Battleship2/actions/workflows/maven.yml)
+![Java Version](https://img.shields.io/badge/Java-21-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 > A modern take on the classic naval warfare game, designed for the XVII century setting with updated software engineering patterns.
@@ -149,14 +149,28 @@ Prompt final para o jogo da Batalha Naval
 
 ---
 
-## 🧪 Testing
-We use high-coverage unit testing to ensure game stability. Run tests using:
+## 🧪 Testing & Continuous Integration (CI)
+
+We use high-coverage unit testing with **JUnit 5** to ensure game stability and avoid regression during refactoring.
+
+### Automated CI with GitHub Actions
+As part of our CI/CD pipeline, the repository includes an automated workflow [`.github/workflows/maven.yml`](.github/workflows/maven.yml) (**Java CI with Maven**) that triggers on:
+- Every `push` to any branch in the repository.
+- Every `pull_request` targeting the `main` branch.
+
+The workflow sets up JDK 21 (Temurin distribution), restores cached Maven dependencies, compiles the source code, and automatically runs the complete test suite with:
+```bash
+mvn -B test --file pom.xml
+```
+
+### Running Tests Locally
+Run tests locally using Maven:
 ```bash
 mvn test
 ```
 
 > [!TIP]
-> Use the `-Dtest=ClassName` flag to run specific test suites during development.
+> Use the `-Dtest=ClassName` flag to run specific test suites during development (e.g., `mvn test -Dtest=TasksTest`).
 
 ---
 
