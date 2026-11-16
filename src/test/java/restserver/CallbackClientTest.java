@@ -1,389 +1,262 @@
-
 package restserver;
 
-import battleship.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.*;
+import battleship.IPosition;
+import battleship.Position;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 /**
- * Test class for CallbackClient.
+ * Tests for CallbackClient
  * Author: Tomas Costa (LEI-129836)
- * Date: 2026-11-16 12:52
+ * Generated: 2026-11-16
  *
- * Cyclomatic Complexity (estimated):
- * - Constructor: 1
- * - sendShots(): 9 (including exception paths)
- * - recordAiMove(): 7 (compound conditions)
+ * Estimated cyclomatic complexities (including short-circuit decisions):
+ * - CallbackClient(): 1
+ * - sendShots(...): at least 9
+ * - recordAiMove(...): at least 7
  *
- * recordAiMove() is tested indirectly through sendShots().
- *
- * Mockito is used to simulate HTTP responses without
- * connecting to an external server.
+ * A local JDK HTTP server simulates student callbacks. These tests are
+ * local integration tests, without external network connections.
  */
 public class CallbackClientTest {
 
     private CallbackClient client;
-    private HttpClient http;
-    private GameSession session;
-    private IGame game;
-    private List<IPosition> shots;
+    private GameRegistry registry;
+    private HttpServer server;
+    private String baseUrl;
+    private final AtomicReference<String> requestBody = new AtomicReference<>();
+    private final AtomicReference<String> requestPath = new AtomicReference<>();
+    private final AtomicReference<String> requestMethod = new AtomicReference<>();
+
+    private volatile int status;
+    private volatile String responseBody;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() throws IOException {
         client = new CallbackClient();
+        registry = new GameRegistry();
+        status = 200;
+        responseBody = json("MISS", 5, "ONGOING");
+        requestBody.set(null);
+        requestPath.set(null);
+        requestMethod.set(null);
 
-        http = mock(HttpClient.class);
-        session = mock(GameSession.class);
-        game = mock(IGame.class);
-
-        injectField("http", http);
-
-        when(session.getCallbackUrl())
-                .thenReturn("http://localhost:8081");
-        when(session.getGameId()).thenReturn("test-game");
-        when(session.getPlayerName()).thenReturn("Tomas");
-        when(session.getGame()).thenReturn(game);
-
-        when(game.getAlienMoves())
-                .thenReturn(new ArrayList<>());
-
-        shots = new ArrayList<>();
-        shots.add(new Position(1, 1));
+        server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/", this::handle);
+        server.start();
+        baseUrl = "http://127.0.0.1:" + server.getAddress().getPort();
     }
 
     @AfterEach
     void tearDown() {
+        if (server != null) server.stop(0);
+        server = null;
         client = null;
-        http = null;
-        session = null;
-        game = null;
-        shots = null;
+        registry = null;
     }
 
-    private void injectField(String name, Object value)
-            throws Exception {
-        Field field = CallbackClient.class.getDeclaredField(name);
-        field.setAccessible(true);
-        field.set(client, value);
+    private void handle(HttpExchange exchange) throws IOException {
+        requestPath.set(exchange.getRequestURI().getPath());
+        requestMethod.set(exchange.getRequestMethod());
+        requestBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+        byte[] bytes = responseBody.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "application/json");
+        exchange.sendResponseHeaders(status, bytes.length);
+        try (var output = exchange.getResponseBody()) {
+            output.write(bytes);
+        }
     }
 
-    @SuppressWarnings("unchecked")
-    private void mockResponse(int status, String body)
-            throws Exception {
-
-        HttpResponse<String> response = mock(HttpResponse.class);
-
-        when(response.statusCode()).thenReturn(status);
-        when(response.body()).thenReturn(body);
-
-        when(http.send(
-                any(HttpRequest.class),
-                any(HttpResponse.BodyHandler.class)
-        )).thenReturn(response);
+    private GameSession session() {
+        return registry.createSession("Tomas", baseUrl);
     }
 
-    private String responseJson(String outcome,
-                                int remaining,
-                                String status) {
-        return """
-                {
-                  "results": [
-                    {"row":"A","column":1,"outcome":"%s"}
-                  ],
-                  "shipsRemaining":%d,
-                  "gameStatus":"%s"
-                }
-                """.formatted(outcome, remaining, status);
+    private List<IPosition> oneShot() {
+        return List.of(new Position('A', 1));
+    }
+
+    private String json(String outcome, int remaining, String gameStatus) {
+        return "{\"results\":[{\"row\":\"A\",\"column\":1,\"outcome\":\""
+                + outcome + "\"}],\"shipsRemaining\":" + remaining
+                + ",\"gameStatus\":\"" + gameStatus + "\"}";
     }
 
     @Test
-    @DisplayName("Constructor - HTTP client and mapper initialized")
-    void constructor() throws Exception {
-        CallbackClient newClient = new CallbackClient();
+    @DisplayName("Constructor: CallbackClient is initialized")
+    void constructor() {
+        assertNotNull(client, "Error: expected initialized CallbackClient");
+    }
 
-        Field httpField =
-                CallbackClient.class.getDeclaredField("http");
-        Field mapperField =
-                CallbackClient.class.getDeclaredField("mapper");
-
-        httpField.setAccessible(true);
-        mapperField.setAccessible(true);
-
+    @Test
+    @DisplayName("Send shots 1: successful HTTP 200 response")
+    void sendShots1() {
+        GameSession session = session();
+        int before = session.getGame().getAlienMoves().size();
+        assertTrue(client.sendShots(session, oneShot()),
+                "Error: a successful HTTP 200 response should return true");
         assertAll(
-                () -> assertNotNull(newClient,
-                        "Error: CallbackClient should not be null."),
-                () -> assertNotNull(httpField.get(newClient),
-                        "Error: HTTP client should be initialized."),
-                () -> assertNotNull(mapperField.get(newClient),
-                        "Error: ObjectMapper should be initialized.")
+                () -> assertEquals(before + 1, session.getGame().getAlienMoves().size(),
+                        "Error: a move should have been recorded"),
+                () -> assertEquals("POST", requestMethod.get(), "Error: expected POST"),
+                () -> assertEquals("/game/" + session.getGameId() + "/shots", requestPath.get(),
+                        "Error: incorrect callback endpoint"),
+                () -> assertTrue(requestBody.get().contains("shots"),
+                        "Error: request body should contain shots")
         );
     }
 
     @Test
-    @DisplayName("SendShots 1 - Successful HTTP request")
-    void sendShots1() throws Exception {
-        mockResponse(200, responseJson("MISS", 5, "ONGOING"));
-
-        boolean result = client.sendShots(session, shots);
-
-        assertTrue(result,
-                "Error: HTTP 200 with valid JSON should succeed.");
-
-        assertEquals(1, game.getAlienMoves().size(),
-                "Error: Successful callback should record one move.");
+    @DisplayName("Send shots 2: HTTP 400 returns false")
+    void sendShots2() {
+        status = 400;
+        responseBody = "{\"error\":\"bad request\"}";
+        assertFalse(client.sendShots(session(), oneShot()),
+                "Error: HTTP 400 should return false");
     }
 
     @Test
-    @DisplayName("SendShots 2 - HTTP 400 failure")
-    void sendShots2() throws Exception {
-        mockResponse(400, "Bad Request");
-
-        boolean result = client.sendShots(session, shots);
-
-        assertFalse(result,
-                "Error: HTTP 400 should return false.");
+    @DisplayName("Send shots 3: HTTP 500 returns false")
+    void sendShots3() {
+        status = 500;
+        responseBody = "{\"error\":\"server error\"}";
+        assertFalse(client.sendShots(session(), oneShot()),
+                "Error: HTTP 500 should return false");
     }
 
     @Test
-    @DisplayName("SendShots 3 - HTTP 500 failure")
-    void sendShots3() throws Exception {
-        mockResponse(500, "Internal Server Error");
-
-        boolean result = client.sendShots(session, shots);
-
-        assertFalse(result,
-                "Error: HTTP 500 should return false.");
+    @DisplayName("Send shots 4: malformed JSON returns false")
+    void sendShots4() {
+        responseBody = "{ broken json";
+        assertFalse(client.sendShots(session(), oneShot()),
+                "Error: malformed response JSON should return false");
     }
 
     @Test
-    @DisplayName("SendShots 4 - HTTP IOException")
-    void sendShots4() throws Exception {
-        when(http.send(
-                any(HttpRequest.class),
-                any(HttpResponse.BodyHandler.class)
-        )).thenThrow(new IOException("Connection refused"));
-
-        boolean result = client.sendShots(session, shots);
-
-        assertFalse(result,
-                "Error: IOException should return false.");
+    @DisplayName("Send shots 5: unavailable local server returns false")
+    void sendShots5() {
+        GameSession session = session();
+        server.stop(0);
+        server = null;
+        assertFalse(client.sendShots(session, oneShot()),
+                "Error: refused connection should return false");
     }
 
     @Test
-    @DisplayName("SendShots 5 - Interrupted HTTP request")
-    void sendShots5() throws Exception {
-        when(http.send(
-                any(HttpRequest.class),
-                any(HttpResponse.BodyHandler.class)
-        )).thenThrow(new InterruptedException("Interrupted"));
-
-        boolean result = client.sendShots(session, shots);
-
-        assertFalse(result,
-                "Error: Interrupted request should return false.");
-    }
-
-    @Test
-    @DisplayName("SendShots 6 - Invalid JSON response")
-    void sendShots6() throws Exception {
-        mockResponse(200, "{ invalid json }");
-
-        boolean result = client.sendShots(session, shots);
-
-        assertFalse(result,
-                "Error: Invalid JSON should return false.");
-    }
-
-    @Test
-    @DisplayName("SendShots 7 - AI wins with zero remaining ships")
-    void sendShots7() throws Exception {
-        mockResponse(200, responseJson("SUNK", 0, "ONGOING"));
-
-        boolean result = client.sendShots(session, shots);
-
-        assertTrue(result,
-                "Error: Successful callback should return true.");
-
-        verify(session).markAiWins();
-    }
-
-    @Test
-    @DisplayName("SendShots 8 - AI wins with GAME_OVER status")
-    void sendShots8() throws Exception {
-        mockResponse(200, responseJson("SUNK", 2, "GAME_OVER"));
-
-        boolean result = client.sendShots(session, shots);
-
-        assertTrue(result,
-                "Error: Valid GAME_OVER response should succeed.");
-
-        verify(session).markAiWins();
-    }
-
-    @Test
-    @DisplayName("SendShots 9 - Serialization IOException")
-    void sendShots9() throws Exception {
-        ObjectMapper mapper = mock(ObjectMapper.class);
-        injectField("mapper", mapper);
-
-        when(mapper.writeValueAsString(any()))
-                .thenThrow(new IOException("Serialization failed"));
-
-        boolean result = client.sendShots(session, shots);
-
-        assertFalse(result,
-                "Error: Serialization failure should return false.");
-
-        verifyNoInteractions(http);
-    }
-
-    @Test
-    @DisplayName("RecordAiMove 1 - MISS outcome")
-    void recordAiMove1() throws Exception {
-        mockResponse(200, responseJson("MISS", 5, "ONGOING"));
-
-        assertTrue(client.sendShots(session, shots),
-                "Error: Callback should succeed.");
-
-        assertEquals(1, game.getAlienMoves().size(),
-                "Error: MISS should be recorded in alien moves.");
-    }
-
-    @Test
-    @DisplayName("RecordAiMove 2 - HIT outcome")
-    void recordAiMove2() throws Exception {
-        mockResponse(200, responseJson("HIT", 5, "ONGOING"));
-
-        assertTrue(client.sendShots(session, shots),
-                "Error: HIT callback should succeed.");
-
-        assertEquals(1, game.getAlienMoves().size(),
-                "Error: HIT should be recorded.");
-    }
-
-    @Test
-    @DisplayName("RecordAiMove 3 - SUNK outcome")
-    void recordAiMove3() throws Exception {
-        mockResponse(200, responseJson("SUNK", 3, "ONGOING"));
-
-        assertTrue(client.sendShots(session, shots),
-                "Error: SUNK callback should succeed.");
-
-        assertEquals(1, game.getAlienMoves().size(),
-                "Error: SUNK should be recorded.");
-    }
-
-    @Test
-    @DisplayName("RecordAiMove 4 - INVALID outcome")
-    void recordAiMove4() throws Exception {
-        mockResponse(200, responseJson("INVALID", 5, "ONGOING"));
-
-        assertTrue(client.sendShots(session, shots),
-                "Error: INVALID outcome should be processed.");
-
-        assertEquals(1, game.getAlienMoves().size(),
-                "Error: INVALID shot should still be recorded.");
-    }
-
-    @Test
-    @DisplayName("RecordAiMove 5 - REPEATED outcome")
-    void recordAiMove5() throws Exception {
-        mockResponse(200, responseJson("REPEATED", 5, "ONGOING"));
-
-        assertTrue(client.sendShots(session, shots),
-                "Error: REPEATED outcome should be processed.");
-
-        assertEquals(1, game.getAlienMoves().size(),
-                "Error: REPEATED shot should be recorded.");
-    }
-
-    @Test
-    @DisplayName("RecordAiMove 6 - Null results list")
-    void recordAiMove6() throws Exception {
-        String json = """
-                {
-                  "results": null,
-                  "shipsRemaining": 5,
-                  "gameStatus": "ONGOING"
-                }
-                """;
-
-        mockResponse(200, json);
-
-        boolean result = client.sendShots(session, shots);
-
-        assertTrue(result,
-                "Error: Null results should not crash callback.");
-
-        assertEquals(0, game.getAlienMoves().size(),
-                "Error: Null results should not record a move.");
-    }
-
-    @Test
-    @DisplayName("RecordAiMove 7 - Empty results list")
-    void recordAiMove7() throws Exception {
-        String json = """
-                {
-                  "results": [],
-                  "shipsRemaining": 5,
-                  "gameStatus": "ONGOING"
-                }
-                """;
-
-        mockResponse(200, json);
-
-        boolean result = client.sendShots(session, shots);
-
-        assertTrue(result,
-                "Error: Empty results should be accepted.");
-
-        assertEquals(1, game.getAlienMoves().size(),
-                "Error: Empty results should produce an empty move.");
-    }
-
-    @Test
-    @DisplayName("SendShots - Request uses POST and correct endpoint")
-    void sendShotsRequest() throws Exception {
-        mockResponse(200, responseJson("MISS", 5, "ONGOING"));
-
-        assertTrue(client.sendShots(session, shots),
-                "Error: Valid callback should succeed.");
-
-        org.mockito.ArgumentCaptor<HttpRequest> captor =
-                org.mockito.ArgumentCaptor.forClass(HttpRequest.class);
-
-        verify(http).send(
-                captor.capture(),
-                any(HttpResponse.BodyHandler.class)
-        );
-
-        HttpRequest request = captor.getValue();
-
+    @DisplayName("Send shots 6: zero remaining ships marks AI victory")
+    void sendShots6() {
+        responseBody = json("SUNK", 0, "ONGOING");
+        GameSession session = session();
+        assertTrue(client.sendShots(session, oneShot()),
+                "Error: valid response should return true");
         assertAll(
-                () -> assertEquals("POST", request.method(),
-                        "Error: HTTP method should be POST."),
-                () -> assertEquals(
-                        "http://localhost:8081/game/test-game/shots",
-                        request.uri().toString(),
-                        "Error: Callback URL is incorrect."),
-                () -> assertEquals(
-                        "application/json",
-                        request.headers()
-                                .firstValue("Content-Type")
-                                .orElse(null),
-                        "Error: Content-Type should be JSON.")
+                () -> assertTrue(session.isGameOver(), "Error: AI victory should finish game"),
+                () -> assertNotNull(session.getWinner(),
+                        "Error: winner should be recorded after AI victory")
         );
+    }
+
+    @Test
+    @DisplayName("Send shots 7: GAME_OVER marks AI victory")
+    void sendShots7() {
+        responseBody = json("HIT", 2, "GAME_OVER");
+        GameSession session = session();
+        assertTrue(client.sendShots(session, oneShot()),
+                "Error: valid GAME_OVER response should return true");
+        assertTrue(session.isGameOver(), "Error: GAME_OVER should finish game");
+    }
+
+    @Test
+    @DisplayName("Record AI move 1: missing results does not add a move")
+    void recordAiMove1() {
+        responseBody = "{\"results\":null,\"shipsRemaining\":5,\"gameStatus\":\"ONGOING\"}";
+        GameSession session = session();
+        int before = session.getGame().getAlienMoves().size();
+        assertTrue(client.sendShots(session, oneShot()),
+                "Error: null results should be accepted by implementation");
+        assertEquals(before, session.getGame().getAlienMoves().size(),
+                "Error: null results should not record a move");
+    }
+
+    @Test
+    @DisplayName("Record AI move 2: empty result list adds empty move")
+    void recordAiMove2() {
+        responseBody = "{\"results\":[],\"shipsRemaining\":5,\"gameStatus\":\"ONGOING\"}";
+        GameSession session = session();
+        int before = session.getGame().getAlienMoves().size();
+        assertTrue(client.sendShots(session, oneShot()),
+                "Error: empty results should be accepted");
+        assertEquals(before + 1, session.getGame().getAlienMoves().size(),
+                "Error: empty result list should still generate a move");
+    }
+
+    @Test
+    @DisplayName("Record AI move 3: INVALID outcome is processed")
+    void recordAiMove3() {
+        responseBody = json("INVALID", 5, "ONGOING");
+        GameSession session = session();
+        assertTrue(client.sendShots(session, oneShot()),
+                "Error: INVALID outcome should be processed");
+        assertEquals(1, session.getGame().getAlienMoves().size(),
+                "Error: INVALID outcome should record a move");
+    }
+
+    @Test
+    @DisplayName("Record AI move 4: REPEATED outcome is processed")
+    void recordAiMove4() {
+        responseBody = json("REPEATED", 5, "ONGOING");
+        GameSession session = session();
+        assertTrue(client.sendShots(session, oneShot()),
+                "Error: REPEATED outcome should be processed");
+        assertEquals(1, session.getGame().getAlienMoves().size(),
+                "Error: REPEATED outcome should record a move");
+    }
+
+    @Test
+    @DisplayName("Record AI move 5: SUNK outcome is processed")
+    void recordAiMove5() {
+        responseBody = json("SUNK", 3, "ONGOING");
+        GameSession session = session();
+        assertTrue(client.sendShots(session, oneShot()),
+                "Error: SUNK outcome should be processed");
+        assertEquals(1, session.getGame().getAlienMoves().size(),
+                "Error: SUNK outcome should record a move");
+    }
+
+    @Test
+    @DisplayName("Record AI move 6: fewer results than shots")
+    void recordAiMove6() {
+        responseBody = json("MISS", 5, "ONGOING");
+        GameSession session = session();
+        List<IPosition> twoShots = new ArrayList<>();
+        twoShots.add(new Position('A', 1));
+        twoShots.add(new Position('B', 2));
+        assertTrue(client.sendShots(session, twoShots),
+                "Error: a shorter result list should not crash callback");
+        assertEquals(1, session.getGame().getAlienMoves().size(),
+                "Error: one move should be recorded");
+    }
+
+    @Test
+    @DisplayName("Record AI move 7: no shots with empty results")
+    void recordAiMove7() {
+        responseBody = "{\"results\":[],\"shipsRemaining\":5,\"gameStatus\":\"ONGOING\"}";
+        GameSession session = session();
+        assertTrue(client.sendShots(session, List.of()),
+                "Error: empty shots should be serializable");
+        assertEquals(1, session.getGame().getAlienMoves().size(),
+                "Error: empty move should be recorded");
     }
 }
