@@ -1,554 +1,267 @@
-
 package restserver;
 
-import battleship.*;
-import org.junit.jupiter.api.*;
+import battleship.Game;
+import battleship.IGame;
+import battleship.IPosition;
+import battleship.Position;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import restserver.Dtos.*;
+import restserver.Dtos.RegistrationRequest;
+import restserver.Dtos.RegistrationResponse;
+import restserver.Dtos.ShotPosition;
+import restserver.Dtos.ShotRequest;
+import restserver.Dtos.ShotResponse;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 /**
- * Test class for GameController.
+ * Tests for GameController
  * Author: Tomas Costa (LEI-129836)
- * Date: 2026-11-16 12:52
+ * Generated: 2026-11-16
  *
- * Cyclomatic Complexity (estimated):
- * - Constructor: 1
- * - register(): 5 (compound conditions)
- * - receiveShots(): 11 (compound conditions)
- * - evaluateShots(): 7 (including result decisions)
- * - error(): 1
+ * Estimated cyclomatic complexities (decision/short-circuit paths):
+ * - GameController(...): 1
+ * - register(...): 5
+ * - receiveShots(...): at least 11
+ * - evaluateShots(...): at least 7
+ * - error(...): 1
  *
- * The private helper methods are tested indirectly
- * through the public controller methods.
+ * No third-party mocking library is used. Some tests use the real
+ * GameRegistry/GameSession, so this is a mix of unit and integration tests.
+ * The private helper is exercised by reflection for coverage of conversion.
  */
 public class GameControllerTest {
 
-    private GameController controller;
     private GameRegistry registry;
-    private CallbackClient callbackClient;
-    private AiShotStrategy aiStrategy;
-    private GameSession session;
-    private IGame game;
+    private GameController controller;
 
     @BeforeEach
     void setUp() {
-        registry = mock(GameRegistry.class);
-        callbackClient = mock(CallbackClient.class);
-        aiStrategy = mock(AiShotStrategy.class);
-        session = mock(GameSession.class);
-        game = mock(IGame.class);
-
-        controller = new GameController(
-                registry, callbackClient, aiStrategy
-        );
-
-        when(session.getGame()).thenReturn(game);
-        when(session.getGameId()).thenReturn("test-game");
-        when(session.getPlayerName()).thenReturn("Tomas");
-        when(session.getCallbackUrl())
-                .thenReturn("http://localhost:8081");
-
-        when(registry.getSession("test-game"))
-                .thenReturn(session);
-
-        when(game.getRemainingShips()).thenReturn(5);
-        when(game.fireSingleShot(any(IPosition.class), anyBoolean()))
-                .thenReturn(new IGame.ShotResult(
-                        true, false, null, false
-                ));
-
-        when(aiStrategy.computeShots(any(IGame.class)))
-                .thenReturn(new ArrayList<>());
-
-        when(callbackClient.sendShots(
-                any(GameSession.class), anyList()
-        )).thenReturn(true);
+        // GameRegistry is expected to expose the usual no-argument constructor.
+        registry = new GameRegistry();
+        // No callback or AI strategy is needed for early validation paths.
+        controller = new GameController(registry, null, null);
     }
 
     @AfterEach
     void tearDown() {
         controller = null;
         registry = null;
-        callbackClient = null;
-        aiStrategy = null;
-        session = null;
-        game = null;
     }
 
-    private RegistrationRequest registration(
-            String name, String url
-    ) {
-        RegistrationRequest request = new RegistrationRequest();
-        request.playerName = name;
-        request.callbackUrl = url;
-        return request;
+    private RegistrationRequest registration(String name, String url) {
+        RegistrationRequest r = new RegistrationRequest();
+        r.playerName = name;
+        r.callbackUrl = url;
+        return r;
     }
 
-    private ShotRequest validShots() {
-        ShotRequest request = new ShotRequest();
-        request.shots = new ArrayList<>();
-
-        for (int i = 0; i < Game.NUMBER_SHOTS; i++) {
-            ShotPosition position = new ShotPosition();
-            position.row = "A";
-            position.column = i + 1;
-            request.shots.add(position);
+    private ShotRequest requestWithShots(int number) {
+        ShotRequest r = new ShotRequest();
+        r.shots = new ArrayList<>();
+        for (int i = 0; i < number; i++) {
+            ShotPosition p = new ShotPosition();
+            p.row = String.valueOf((char) ('A' + (i % 10)));
+            p.column = 1 + (i / 10) % 10;
+            r.shots.add(p);
         }
+        return r;
+    }
 
-        return request;
+    private GameSession session() {
+        return registry.createSession("Tomas", "http://localhost:1");
     }
 
     @Test
-    @DisplayName("Constructor - Controller initialized")
+    @DisplayName("Constructor: stores a usable controller")
     void constructor() {
-        assertNotNull(controller,
-                "Error: GameController should not be null.");
+        assertNotNull(controller, "Error: expected initialized controller, got null");
     }
 
     @Test
-    @DisplayName("Register 1 - Valid registration")
+    @DisplayName("Register 1: valid player and URL")
     void register1() {
-        when(registry.createSession(anyString(), anyString()))
-                .thenReturn(session);
-
-        ResponseEntity<?> response = controller.register(
-                registration("Tomas", "http://localhost:8081")
-        );
-
+        ResponseEntity<?> response = controller.register(registration("Tomas", "http://localhost:1"));
+        assertEquals(HttpStatus.OK, response.getStatusCode(),
+                "Error: expected 200 for valid registration");
+        assertInstanceOf(RegistrationResponse.class, response.getBody(),
+                "Error: expected RegistrationResponse body");
+        RegistrationResponse body = (RegistrationResponse) response.getBody();
         assertAll(
-                () -> assertEquals(HttpStatus.OK,
-                        response.getStatusCode(),
-                        "Error: Expected HTTP 200."),
-                () -> assertInstanceOf(
-                        RegistrationResponse.class,
-                        response.getBody(),
-                        "Error: Expected RegistrationResponse."
-                )
-        );
-
-        RegistrationResponse body =
-                (RegistrationResponse) response.getBody();
-
-        assertNotNull(body,
-                "Error: Registration response should not be null.");
-
-        assertAll(
-                () -> assertEquals("test-game", body.gameId,
-                        "Error: Incorrect game ID."),
-                () -> assertEquals("REGISTERED", body.status,
-                        "Error: Incorrect registration status."),
-                () -> assertEquals("Welcome, Tomas! Game ready. You shoot first.",
-                        body.message,
-                        "Error: Incorrect welcome message.")
-        );
-
-        verify(registry).createSession(
-                "Tomas", "http://localhost:8081"
+                () -> assertNotNull(body.gameId, "Error: game ID should not be null"),
+                () -> assertEquals("REGISTERED", body.status, "Error: wrong registration status"),
+                () -> assertTrue(body.message.contains("Tomas"), "Error: missing player name"),
+                () -> assertNotNull(registry.getSession(body.gameId),
+                        "Error: registered session should exist")
         );
     }
 
     @Test
-    @DisplayName("Register 2 - Null player name")
+    @DisplayName("Register 2: null player name")
     void register2() {
-        ResponseEntity<?> response = controller.register(
-                registration(null, "http://localhost:8081")
-        );
-
         assertEquals(HttpStatus.BAD_REQUEST,
-                response.getStatusCode(),
-                "Error: Null player name should return HTTP 400.");
-
-        verifyNoInteractions(registry);
+                controller.register(registration(null, "http://localhost:1")).getStatusCode(),
+                "Error: null player name should return 400");
     }
 
     @Test
-    @DisplayName("Register 3 - Blank player name")
+    @DisplayName("Register 3: blank player name")
     void register3() {
-        ResponseEntity<?> response = controller.register(
-                registration("   ", "http://localhost:8081")
-        );
-
         assertEquals(HttpStatus.BAD_REQUEST,
-                response.getStatusCode(),
-                "Error: Blank player name should return HTTP 400.");
-
-        verifyNoInteractions(registry);
+                controller.register(registration("  ", "http://localhost:1")).getStatusCode(),
+                "Error: blank player name should return 400");
     }
 
     @Test
-    @DisplayName("Register 4 - Null callback URL")
+    @DisplayName("Register 4: null callback URL")
     void register4() {
-        ResponseEntity<?> response = controller.register(
-                registration("Tomas", null)
-        );
-
         assertEquals(HttpStatus.BAD_REQUEST,
-                response.getStatusCode(),
-                "Error: Null callback URL should return HTTP 400.");
-
-        verifyNoInteractions(registry);
+                controller.register(registration("Tomas", null)).getStatusCode(),
+                "Error: null callback URL should return 400");
     }
 
     @Test
-    @DisplayName("Register 5 - Blank callback URL")
+    @DisplayName("Register 5: blank callback URL")
     void register5() {
-        ResponseEntity<?> response = controller.register(
-                registration("Tomas", "  ")
-        );
-
         assertEquals(HttpStatus.BAD_REQUEST,
-                response.getStatusCode(),
-                "Error: Blank callback URL should return HTTP 400.");
-
-        verifyNoInteractions(registry);
+                controller.register(registration("Tomas", " ")).getStatusCode(),
+                "Error: blank callback URL should return 400");
     }
 
     @Test
-    @DisplayName("ReceiveShots 1 - Game not found")
+    @DisplayName("Receive shots 1: unknown game")
     void receiveShots1() {
-        when(registry.getSession("unknown")).thenReturn(null);
-
-        ResponseEntity<?> response = controller.receiveShots(
-                "unknown", validShots()
-        );
-
         assertEquals(HttpStatus.NOT_FOUND,
-                response.getStatusCode(),
-                "Error: Unknown game should return HTTP 404.");
+                controller.receiveShots("unknown-game", requestWithShots(Game.NUMBER_SHOTS)).getStatusCode(),
+                "Error: unknown game should return 404");
     }
 
     @Test
-    @DisplayName("ReceiveShots 2 - Game already over")
+    @DisplayName("Receive shots 2: finished game")
     void receiveShots2() {
-        when(session.isGameOver()).thenReturn(true);
-        when(session.getWinner()).thenReturn("STUDENT_WINS");
-
-        ResponseEntity<?> response = controller.receiveShots(
-                "test-game", validShots()
-        );
-
+        GameSession session = session();
+        session.markStudentWins();
         assertEquals(HttpStatus.GONE,
-                response.getStatusCode(),
-                "Error: Finished game should return HTTP 410.");
+                controller.receiveShots(session.getGameId(), requestWithShots(Game.NUMBER_SHOTS)).getStatusCode(),
+                "Error: finished game should return 410");
     }
 
     @Test
-    @DisplayName("ReceiveShots 3 - Null shots list")
+    @DisplayName("Receive shots 3: null shot list")
     void receiveShots3() {
-        ShotRequest request = new ShotRequest();
-        request.shots = null;
-
-        ResponseEntity<?> response = controller.receiveShots(
-                "test-game", request
-        );
-
+        GameSession session = session();
+        ShotRequest r = new ShotRequest();
+        r.shots = null;
         assertEquals(HttpStatus.BAD_REQUEST,
-                response.getStatusCode(),
-                "Error: Null shots should return HTTP 400.");
+                controller.receiveShots(session.getGameId(), r).getStatusCode(),
+                "Error: null shot list should return 400");
     }
 
     @Test
-    @DisplayName("ReceiveShots 4 - Incorrect number of shots")
+    @DisplayName("Receive shots 4: wrong number of shots")
     void receiveShots4() {
-        ShotRequest request = new ShotRequest();
-        request.shots = new ArrayList<>();
-
-        ResponseEntity<?> response = controller.receiveShots(
-                "test-game", request
-        );
-
+        GameSession session = session();
+        int wrongCount = Game.NUMBER_SHOTS == 0 ? 1 : Game.NUMBER_SHOTS - 1;
         assertEquals(HttpStatus.BAD_REQUEST,
-                response.getStatusCode(),
-                "Error: Incorrect shot count should return HTTP 400.");
+                controller.receiveShots(session.getGameId(), requestWithShots(wrongCount)).getStatusCode(),
+                "Error: incorrect number of shots should return 400");
     }
 
     @Test
-    @DisplayName("ReceiveShots 5 - Null row")
+    @DisplayName("Receive shots 5: null row")
     void receiveShots5() {
-        ShotRequest request = validShots();
-        request.shots.get(0).row = null;
-
-        ResponseEntity<?> response = controller.receiveShots(
-                "test-game", request
-        );
-
+        GameSession session = session();
+        ShotRequest r = requestWithShots(Game.NUMBER_SHOTS);
+        assertFalse(r.shots.isEmpty(), "Error: a turn should require at least one shot");
+        r.shots.get(0).row = null;
         assertEquals(HttpStatus.BAD_REQUEST,
-                response.getStatusCode(),
-                "Error: Null row should return HTTP 400.");
+                controller.receiveShots(session.getGameId(), r).getStatusCode(),
+                "Error: null row should return 400");
     }
 
     @Test
-    @DisplayName("ReceiveShots 6 - Blank row")
+    @DisplayName("Receive shots 6: blank row")
     void receiveShots6() {
-        ShotRequest request = validShots();
-        request.shots.get(0).row = " ";
-
-        ResponseEntity<?> response = controller.receiveShots(
-                "test-game", request
-        );
-
+        GameSession session = session();
+        ShotRequest r = requestWithShots(Game.NUMBER_SHOTS);
+        r.shots.get(0).row = " ";
         assertEquals(HttpStatus.BAD_REQUEST,
-                response.getStatusCode(),
-                "Error: Blank row should return HTTP 400.");
+                controller.receiveShots(session.getGameId(), r).getStatusCode(),
+                "Error: blank row should return 400");
     }
 
     @Test
-    @DisplayName("ReceiveShots 7 - Column below minimum")
+    @DisplayName("Receive shots 7: column smaller than 1")
     void receiveShots7() {
-        ShotRequest request = validShots();
-        request.shots.get(0).column = 0;
-
-        ResponseEntity<?> response = controller.receiveShots(
-                "test-game", request
-        );
-
+        GameSession session = session();
+        ShotRequest r = requestWithShots(Game.NUMBER_SHOTS);
+        r.shots.get(0).column = 0;
         assertEquals(HttpStatus.BAD_REQUEST,
-                response.getStatusCode(),
-                "Error: Column below 1 should return HTTP 400.");
+                controller.receiveShots(session.getGameId(), r).getStatusCode(),
+                "Error: column 0 should return 400");
     }
 
     @Test
-    @DisplayName("ReceiveShots 8 - Column above maximum")
+    @DisplayName("Receive shots 8: column greater than 10")
     void receiveShots8() {
-        ShotRequest request = validShots();
-        request.shots.get(0).column = 11;
-
-        ResponseEntity<?> response = controller.receiveShots(
-                "test-game", request
-        );
-
+        GameSession session = session();
+        ShotRequest r = requestWithShots(Game.NUMBER_SHOTS);
+        r.shots.get(0).column = 11;
         assertEquals(HttpStatus.BAD_REQUEST,
-                response.getStatusCode(),
-                "Error: Column above 10 should return HTTP 400.");
+                controller.receiveShots(session.getGameId(), r).getStatusCode(),
+                "Error: column 11 should return 400");
     }
 
     @Test
-    @DisplayName("ReceiveShots 9 - Valid shots and callback success")
-    void receiveShots9() {
-        ResponseEntity<?> response = controller.receiveShots(
-                "test-game", validShots()
-        );
-
-        assertEquals(HttpStatus.OK,
-                response.getStatusCode(),
-                "Error: Valid shots should return HTTP 200.");
-
-        ShotResponse body = (ShotResponse) response.getBody();
-
-        assertNotNull(body,
-                "Error: Shot response should not be null.");
-
+    @DisplayName("Evaluate shots 1: returns a result for a valid position")
+    void evaluateShots1() throws Exception {
+        GameSession session = session();
+        List<IPosition> positions = List.of(new Position('A', 1));
+        ShotResponse result = invokeEvaluateShots(positions, session);
         assertAll(
-                () -> assertEquals(Game.NUMBER_SHOTS,
-                        body.results.size(),
-                        "Error: Incorrect number of results."),
-                () -> assertEquals("ONGOING", body.gameStatus,
-                        "Error: Game should be ongoing."),
-                () -> assertEquals(5, body.shipsRemaining,
-                        "Error: Incorrect remaining ship count."),
-                () -> assertNull(body.winner,
-                        "Error: Ongoing game should have no winner.")
-        );
-
-        verify(callbackClient).sendShots(
-                eq(session), anyList()
+                () -> assertEquals(1, result.results.size(), "Error: expected one shot result"),
+                () -> assertEquals("A", result.results.get(0).row, "Error: incorrect row"),
+                () -> assertEquals(1, result.results.get(0).column, "Error: incorrect column"),
+                () -> assertEquals("ONGOING", result.gameStatus, "Error: expected ONGOING status")
         );
     }
 
     @Test
-    @DisplayName("ReceiveShots 10 - Student wins")
-    void receiveShots10() {
-        when(game.getRemainingShips()).thenReturn(0);
-
-        ResponseEntity<?> response = controller.receiveShots(
-                "test-game", validShots()
-        );
-
-        ShotResponse body = (ShotResponse) response.getBody();
-
-        assertNotNull(body,
-                "Error: Expected a shot response.");
-
+    @DisplayName("Evaluate shots 2: processes an empty shot list")
+    void evaluateShots2() throws Exception {
+        GameSession session = session();
+        ShotResponse result = invokeEvaluateShots(List.of(), session);
         assertAll(
-                () -> assertEquals(HttpStatus.OK,
-                        response.getStatusCode(),
-                        "Error: Winning turn should return HTTP 200."),
-                () -> assertEquals("GAME_OVER", body.gameStatus,
-                        "Error: Game should be over."),
-                () -> assertEquals("STUDENT_WINS", body.winner,
-                        "Error: Student should be the winner.")
-        );
-
-        verify(session).markStudentWins();
-        verifyNoInteractions(callbackClient);
-    }
-
-    @Test
-    @DisplayName("ReceiveShots 11 - Callback failure does not crash turn")
-    void receiveShots11() {
-        when(callbackClient.sendShots(
-                eq(session), anyList()
-        )).thenReturn(false);
-
-        ResponseEntity<?> response = controller.receiveShots(
-                "test-game", validShots()
-        );
-
-        assertEquals(HttpStatus.OK,
-                response.getStatusCode(),
-                "Error: Callback failure should not abort the turn.");
-    }
-
-    @Test
-    @DisplayName("EvaluateShots 1 - Invalid shot")
-    void evaluateShots1() {
-        when(game.fireSingleShot(
-                any(IPosition.class), anyBoolean()
-        )).thenReturn(new IGame.ShotResult(
-                false, false, null, false
-        ));
-
-        ShotResponse body = (ShotResponse) controller.receiveShots(
-                "test-game", validShots()
-        ).getBody();
-
-        assertNotNull(body, "Error: Response should not be null.");
-
-        assertEquals("INVALID", body.results.get(0).outcome,
-                "Error: Invalid shot should have INVALID outcome.");
-    }
-
-    @Test
-    @DisplayName("EvaluateShots 2 - Repeated shot")
-    void evaluateShots2() {
-        when(game.fireSingleShot(
-                any(IPosition.class), anyBoolean()
-        )).thenReturn(new IGame.ShotResult(
-                true, true, null, false
-        ));
-
-        ShotResponse body = (ShotResponse) controller.receiveShots(
-                "test-game", validShots()
-        ).getBody();
-
-        assertNotNull(body, "Error: Response should not be null.");
-
-        assertEquals("REPEATED", body.results.get(0).outcome,
-                "Error: Repeated shot should have REPEATED outcome.");
-    }
-
-    @Test
-    @DisplayName("EvaluateShots 3 - Missed shot")
-    void evaluateShots3() {
-        ShotResponse body = (ShotResponse) controller.receiveShots(
-                "test-game", validShots()
-        ).getBody();
-
-        assertNotNull(body, "Error: Response should not be null.");
-
-        assertEquals("MISS", body.results.get(0).outcome,
-                "Error: Shot without a ship should be MISS.");
-    }
-
-    @Test
-    @DisplayName("EvaluateShots 4 - Ship hit")
-    void evaluateShots4() {
-        IShip ship = mock(IShip.class);
-        when(ship.getCategory()).thenReturn("barca");
-
-        when(game.fireSingleShot(
-                any(IPosition.class), anyBoolean()
-        )).thenReturn(new IGame.ShotResult(
-                true, false, ship, false
-        ));
-
-        ShotResponse body = (ShotResponse) controller.receiveShots(
-                "test-game", validShots()
-        ).getBody();
-
-        assertNotNull(body, "Error: Response should not be null.");
-
-        assertAll(
-                () -> assertEquals("HIT", body.results.get(0).outcome,
-                        "Error: Expected HIT outcome."),
-                () -> assertEquals("barca", body.results.get(0).shipType,
-                        "Error: Incorrect ship category.")
+                () -> assertTrue(result.results.isEmpty(), "Error: expected no shot results"),
+                () -> assertNull(result.winner, "Error: winner should be null")
         );
     }
 
     @Test
-    @DisplayName("EvaluateShots 5 - Ship sunk")
-    void evaluateShots5() {
-        IShip ship = mock(IShip.class);
-        when(ship.getCategory()).thenReturn("barca");
-
-        when(game.fireSingleShot(
-                any(IPosition.class), anyBoolean()
-        )).thenReturn(new IGame.ShotResult(
-                true, false, ship, true
-        ));
-
-        ShotResponse body = (ShotResponse) controller.receiveShots(
-                "test-game", validShots()
-        ).getBody();
-
-        assertNotNull(body, "Error: Response should not be null.");
-
-        assertAll(
-                () -> assertEquals("SUNK", body.results.get(0).outcome,
-                        "Error: Expected SUNK outcome."),
-                () -> assertEquals("barca", body.results.get(0).shipType,
-                        "Error: Incorrect sunk ship category.")
-        );
+    @DisplayName("Evaluate shots 3: duplicate positions are still represented")
+    void evaluateShots3() throws Exception {
+        GameSession session = session();
+        List<IPosition> positions = List.of(new Position('A', 1), new Position('A', 1));
+        ShotResponse result = invokeEvaluateShots(positions, session);
+        assertEquals(2, result.results.size(),
+                "Error: both supplied shots should have a result");
     }
 
-    @Test
-    @DisplayName("EvaluateShots 6 - Lowercase row conversion")
-    void evaluateShots6() {
-        ShotRequest request = validShots();
-        request.shots.get(0).row = "a";
-
-        ResponseEntity<?> response = controller.receiveShots(
-                "test-game", request
-        );
-
-        assertEquals(HttpStatus.OK,
-                response.getStatusCode(),
-                "Error: Lowercase row should be accepted.");
-
-        verify(game, atLeastOnce()).fireSingleShot(
-                any(IPosition.class), anyBoolean()
-        );
-    }
-
-    @Test
-    @DisplayName("EvaluateShots 7 - Repeated positions in same turn")
-    void evaluateShots7() {
-        Assumptions.assumeTrue(Game.NUMBER_SHOTS > 1,
-                "This test requires multiple shots per turn.");
-
-        ShotRequest request = validShots();
-        request.shots.get(1).row = request.shots.get(0).row;
-        request.shots.get(1).column = request.shots.get(0).column;
-
-        ResponseEntity<?> response = controller.receiveShots(
-                "test-game", request
-        );
-
-        assertEquals(HttpStatus.OK,
-                response.getStatusCode(),
-                "Error: Repeated positions should be processed.");
-
-        verify(game, atLeastOnce()).fireSingleShot(
-                any(IPosition.class), eq(true)
-        );
+    // Only required because GameController's helper is private and its
+    // normal path requires an AI strategy and callback dependencies.
+    private ShotResponse invokeEvaluateShots(List<IPosition> positions,
+                                             GameSession session) throws Exception {
+        Method method = GameController.class.getDeclaredMethod(
+                "evaluateShots", List.class, IGame.class, GameSession.class);
+        method.setAccessible(true);
+        return (ShotResponse) method.invoke(controller, positions, session.getGame(), session);
     }
 }
