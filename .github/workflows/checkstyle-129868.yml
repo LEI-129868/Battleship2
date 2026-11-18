@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Obter o codigo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
 
@@ -26,9 +26,10 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           checkstyle_config: checkstyle-129868.xml
+          checkstyle_version: '14.4.0'
           workdir: src/main
-          reporter: github-check
+          reporter: github-pr-check
           level: error
-          filter_mode: added
+          filter_mode: nofilter
           fail_level: error
           reviewdog_flags: -name=checkstyle-report-129868
