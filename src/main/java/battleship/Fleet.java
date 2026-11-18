@@ -114,12 +114,12 @@ public class Fleet implements IFleet
     {
 		assert category != null;
 
-		List<IShip> shipsLike = new ArrayList<IShip>();
+		List<IShip> matchingShips = new ArrayList<IShip>();
 		for (IShip s : ships)
 			if (s.getCategory().equals(category))
-				shipsLike.add(s);
+				matchingShips.add(s);
 
-		return shipsLike;
+		return matchingShips;
     }
 
 	/**
