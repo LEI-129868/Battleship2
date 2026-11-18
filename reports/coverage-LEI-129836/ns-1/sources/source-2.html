@@ -1,0 +1,138 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > GameLogger</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">battleship</a>
+</div>
+
+<h1>Coverage Summary for Class: GameLogger (battleship)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">GameLogger</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (9/9)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package battleship;
+&nbsp;
+&nbsp;import java.io.FileWriter;
+&nbsp;import java.io.IOException;
+&nbsp;import java.io.PrintWriter;
+&nbsp;
+<b class="fc">&nbsp;public class GameLogger {</b>
+&nbsp;    private static final String LOG_FILE = &quot;historico_jogadas.txt&quot;;
+&nbsp;
+&nbsp;    public static void logMove(int turn, String shotsData, String resultData) {
+<b class="fc">&nbsp;        boolean appendMode = (turn &gt; 1);</b>
+<b class="fc">&nbsp;        try (FileWriter fw = new FileWriter(LOG_FILE, appendMode);</b>
+<b class="fc">&nbsp;             PrintWriter pw = new PrintWriter(fw)) {</b>
+<b class="fc">&nbsp;            pw.println(&quot;--- Jogada &quot; + turn + &quot; ---&quot;);</b>
+<b class="fc">&nbsp;            pw.println(&quot;Shots: &quot; + shotsData);</b>
+<b class="fc">&nbsp;            pw.println(&quot;Result: &quot; + resultData);</b>
+<b class="fc">&nbsp;            pw.println();</b>
+&nbsp;        } catch (IOException e) {
+<b class="fc">&nbsp;            System.err.println(&quot;Erro ao gravar histórico no ficheiro: &quot; + e.getMessage());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-11-16 13:28</div>
+</div>
+</body>
+</html>
