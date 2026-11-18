@@ -459,7 +459,7 @@ class GameTest {
 	@DisplayName("Sem tiros nem legenda, apresenta o tabuleiro base")
 	void printBoard1() {
 		addBarge();
-		String output = captureOutput(() -> Game.printBoard(fleet, List.of(), false, false));
+		String output = captureOutput(() -> BoardPrinter.printBoard(fleet, List.of(), false, false));
 		assertAll(
 				() -> assertBoardCell(output, BARGE_POSITION, '#'),
 				() -> assertFalse(output.contains(I18n.get("board.legend.header")), "A legenda devia estar ausente.")
@@ -469,7 +469,7 @@ class GameTest {
 	@Test
 	@DisplayName("Com tiros e sem legenda, mostra só as marcas dos tiros")
 	void printBoard2() {
-		String output = captureOutput(() -> Game.printBoard(fleet,
+		String output = captureOutput(() -> BoardPrinter.printBoard(fleet,
 				shownShots(new Position(0, 0)), true, false));
 		assertAll(
 				() -> assertBoardCell(output, new Position(0, 0), 'o'),
@@ -480,7 +480,7 @@ class GameTest {
 	@Test
 	@DisplayName("Com legenda e sem tiros, conserva a água sem marca")
 	void printBoard3() {
-		String output = captureOutput(() -> Game.printBoard(fleet,
+		String output = captureOutput(() -> BoardPrinter.printBoard(fleet,
 				shownShots(new Position(0, 0)), false, true));
 		assertAll(
 				() -> assertBoardCell(output, new Position(0, 0), '.'),
@@ -495,7 +495,7 @@ class GameTest {
 		barge.sink();
 		Position adjacent = new Position(1, 2);
 		Position water = new Position(1, 3);
-		String output = captureOutput(() -> Game.printBoard(fleet,
+		String output = captureOutput(() -> BoardPrinter.printBoard(fleet,
 				shownShots(BARGE_POSITION, water, adjacent, BARGE_POSITION, new Position(10, 0)), true, true));
 		assertAll(
 				() -> assertBoardCell(output, BARGE_POSITION, '*'),
@@ -509,7 +509,7 @@ class GameTest {
 	@DisplayName("Rejeita uma frota nula com as assertions JVM ativas")
 	void printBoard5() {
 		requireGameAssertions();
-		assertThrows(AssertionError.class, () -> Game.printBoard(null, List.of(), false, false),
+		assertThrows(AssertionError.class, () -> BoardPrinter.printBoard(null, List.of(), false, false),
 				"Uma frota nula devia violar a primeira pré-condição de printBoard.");
 	}
 
@@ -517,7 +517,7 @@ class GameTest {
 	@DisplayName("Rejeita um histórico nulo com as assertions JVM ativas")
 	void printBoard6() {
 		requireGameAssertions();
-		assertThrows(AssertionError.class, () -> Game.printBoard(fleet, null, false, false),
+		assertThrows(AssertionError.class, () -> BoardPrinter.printBoard(fleet, null, false, false),
 				"Um histórico nulo devia violar a segunda pré-condição de printBoard.");
 	}
 
@@ -525,7 +525,7 @@ class GameTest {
 	@DisplayName("Um navio a flutuar tem marca própria e água nas casas adjacentes")
 	void printShips1() {
 		addBarge();
-		String output = captureOutput(() -> Game.printBoard(fleet, List.of(), false, false));
+		String output = captureOutput(() -> BoardPrinter.printBoard(fleet, List.of(), false, false));
 		assertAll(
 				() -> assertBoardCell(output, BARGE_POSITION, '#'),
 				() -> assertBoardCell(output, new Position(1, 2), '.')
@@ -537,7 +537,7 @@ class GameTest {
 	void printShips2() {
 		Barge barge = addBarge();
 		barge.sink();
-		String output = captureOutput(() -> Game.printBoard(fleet, List.of(), false, false));
+		String output = captureOutput(() -> BoardPrinter.printBoard(fleet, List.of(), false, false));
 		assertAll(
 				() -> assertBoardCell(output, BARGE_POSITION, '#'),
 				() -> assertBoardCell(output, new Position(1, 2), '-')
@@ -547,21 +547,21 @@ class GameTest {
 	@Test
 	@DisplayName("Uma frota vazia não escreve símbolos de navios")
 	void printShips3() {
-		String output = captureOutput(() -> Game.printBoard(fleet, List.of(), false, false));
+		String output = captureOutput(() -> BoardPrinter.printBoard(fleet, List.of(), false, false));
 		assertFalse(output.contains("#"), "Um tabuleiro sem navios não devia mostrar marcas de navios.");
 	}
 
 	@Test
 	@DisplayName("Sem jogadas, pedir as marcas dos tiros deixa as casas intactas")
 	void printBoardShots1() {
-		String output = captureOutput(() -> Game.printBoard(fleet, List.of(), true, false));
+		String output = captureOutput(() -> BoardPrinter.printBoard(fleet, List.of(), true, false));
 		assertBoardCell(output, new Position(0, 0), '.');
 	}
 
 	@Test
 	@DisplayName("Um tiro fora do tabuleiro é ignorado na visualização")
 	void printBoardShots2() {
-		String output = captureOutput(() -> Game.printBoard(fleet, shownShots(new Position(10, 0)), true, false));
+		String output = captureOutput(() -> BoardPrinter.printBoard(fleet, shownShots(new Position(10, 0)), true, false));
 		assertAll(
 				() -> assertBoardCell(output, new Position(9, 0), '.'),
 				() -> assertBoardCell(output, new Position(0, 0), '.')
@@ -571,7 +571,7 @@ class GameTest {
 	@Test
 	@DisplayName("O tabuleiro de consola apresenta dez colunas e dez linhas")
 	void printBoardFrame() {
-		String output = captureOutput(() -> Game.printBoard(fleet, List.of(), false, false));
+		String output = captureOutput(() -> BoardPrinter.printBoard(fleet, List.of(), false, false));
 		assertAll(
 				() -> assertTrue(output.lines().anyMatch(line -> line.strip().equals("1 2 3 4 5 6 7 8 9 10")),
 						"O cabeçalho devia enumerar as dez colunas."),
