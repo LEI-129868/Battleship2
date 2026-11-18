@@ -21,12 +21,10 @@ public class Caravel extends Ship {
 
 		switch (bearing) {
 			case NORTH:
-				for (int r = 0; r < this.getSize(); r++)
-					getPositions().add(new Position(pos.getRow() + r, pos.getColumn()));
+				addVerticalPositions(pos);
 				break;
 			case SOUTH:
-				for (int r = 0; r < this.getSize(); r++)
-					getPositions().add(new Position(pos.getRow() + r, pos.getColumn()));
+				addVerticalPositions(pos);
 				break;
 			case EAST:
 				for (int c = 0; c < this.getSize(); c++)

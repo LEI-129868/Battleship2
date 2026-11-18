@@ -434,4 +434,9 @@ public abstract class Ship implements IShip
 	public void setPositions(List<IPosition> positions) {
 		this.positions = positions;
 	}
+
+	protected void addVerticalPositions(IPosition pos) {
+		for (int r = 0; r < this.getSize(); r++)
+			getPositions().add(new Position(pos.getRow() + r, pos.getColumn()));
+	}
 }
