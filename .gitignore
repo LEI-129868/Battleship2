@@ -1,2 +1,13 @@
 /target/
 historico_jogadas.txt
+
+# macOS
+.DS_Store
+
+# IDE (ficheiros locais)
+.settings/
+.idea/git_toolbox_prj.xml
+.idea/inspectionProfiles/LEI_129868_DuplicatedCode.xml
+
+# Instruções locais do Codacy
+.github/instructions/

@@ -11,6 +11,17 @@ import java.util.Objects;
  */
 public class Position implements IPosition {
 
+	// Define possible directions (up, right, down, left)
+	private static final int[][] DIRECTIONS = new int[][]{
+			{-1, 0},  // north
+			{0, 1},   // east
+			{1, 0},   // south
+			{0, -1},   // west
+			{1, 1},   // northeast
+			{1, -1},  // northwest
+			{-1, 1},  // southeast
+			{-1, -1} // southwest
+	};
 	/**
 	 * The row coordinate of the position.
 	 */
@@ -136,20 +147,8 @@ public class Position implements IPosition {
 
 		List<IPosition> adjacents = new ArrayList<IPosition>();
 
-		// Define possible directions (up, right, down, left)
-		int[][] directions = {
-				{-1, 0},  // north
-				{0, 1},   // east
-				{1, 0},   // south
-				{0, -1},   // west
-				{1, 1},   // northeast
-				{1, -1},  // northwest
-				{-1, 1},  // southeast
-				{-1, -1} // southwest
-		};
-
 		// Check each possible direction
-		for (int[] dir : directions) {
+		for (int[] dir : DIRECTIONS) {
 			Position newPosition = new Position(row + dir[0], column + dir[1]);
 			// Only add the position if it's inside the board boundaries
 			if (newPosition.isInside()) {
