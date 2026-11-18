@@ -26,9 +26,9 @@ Ficha laboratorial nº 4, Parte 2. Cada membro aplica 7 refabricações de tipos
 | `Move::durationMillis` + getters/setter | Speculative Generality (código morto) | Safe Delete | 129859 |
 | `Galleon::fillWest` / `Galleon::fillEast` | Duplicated Code | Introduce Parameter | 129859 |
 | `Game::randomEnemyFire` | Long Method / Duplicated Code | Extract Method | 129868 |
-| `Game::printBoard`, `printShips`, `printBoardShots`, `printBoardFrame` → nova classe `BoardPrinter` | Large Class | Move Members | 129868 |
-| `Game::printBoard`, `printMyBoard`, `printAlienBoard` (`show_shots`, `show_legend`, `ship_pos`) | Nomes fora da convenção | Rename | 129868 |
+| `Game::printBoard`, `printShips`, `printBoardShots`, `printBoardFrame` e constantes `*_MARKER` → nova classe `BoardPrinter` | Large Class | Move Members | 129868 |
+| `Game::printBoard`, `printMyBoard`, `printAlienBoard`, `IGame` (`show_shots`, `show_legend`) | Nomes fora da convenção | Rename | 129868 |
 | `Game` (campos `countInvalidShots`, `countRepeatedShots`, `countHits`, `countSinks`) | Boxing desnecessário (`Integer`) | Type Migration | 129868 |
-| `Game::jsonShots` (variável `jsonString`) | Atribuição redundante | Inline Variable | 129868 |
+| `Game::getRemainingShips` (variável `floatingShips`) | Variável temporária redundante | Inline Variable | 129868 |
 | `Position::adjacentPositions` (array `directions`) | Valor constante recriado a cada chamada | Introduce Constant | 129868 |
-| `Game::printBoardShots` (`map[row][col]` repetido) | Expressão repetida | Introduce Variable | 129868 |
+| `Game::fireSingleShot` (`!ship.stillFloating()` repetido) | Expressão repetida | Introduce Variable | 129868 |
