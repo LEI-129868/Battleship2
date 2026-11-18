@@ -94,10 +94,7 @@ public abstract class Ship implements IShip
 	 */
 	private Integer size;
 
-	/**
-	 * The Positions occupied by the ship.
-	 */
-	protected List<IPosition> positions;
+	private List<IPosition> positions;
 
 	/**
 	 * Create ships
@@ -118,7 +115,7 @@ public abstract class Ship implements IShip
 		this.pos = pos;
 		this.size = size;
 
-		positions = new ArrayList<>();
+		setPositions(new ArrayList<>());
     }
 
 	/**
@@ -138,6 +135,8 @@ public abstract class Ship implements IShip
     }
 
 	/**
+	 * The Positions occupied by the ship.
+	 */ /**
 	 * Gets positions.
 	 *
 	 * @return the positions
@@ -432,4 +431,7 @@ public abstract class Ship implements IShip
 	return "[" + category + " " + bearing + " " + pos + "]";
     }
 
+	public void setPositions(List<IPosition> positions) {
+		this.positions = positions;
+	}
 }
