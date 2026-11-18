@@ -35,7 +35,7 @@ public class Fleet implements IFleet
 		while (fleetSize < shipTypes.length) {
 
 			// Build the ship
-			Ship ship = Ship.buildShip(shipTypes[fleetSize], Compass.randomBearing(), Position.randomPosition());
+			Ship ship = createRandomShip(shipTypes[fleetSize]);
 
 			// Attempt to add the ship to the fleet
 			if (ship != null && randomFleet.addShip(ship)) {
@@ -45,8 +45,13 @@ public class Fleet implements IFleet
 		return randomFleet;
 	}
 
+	private static Ship createRandomShip(String shipTypes) {
+		return Ship.buildShip(shipTypes, Compass.randomBearing(), Position.randomPosition());
 
-    // -----------------------------------------------------
+	}
+
+
+	// -----------------------------------------------------
 
 	/**
 	 * The Ships.
