@@ -174,20 +174,20 @@ public class Tasks {
 		assert in != null;
 
 		Fleet fleet = new Fleet();
-		int i = 0; // i represents the total of successfully created ships
-		while (i < Fleet.FLEET_SIZE) {
-			IShip s = readShip(in);
-			if (s != null) {
-				boolean success = fleet.addShip(s);
+		int createdShipsCounts = 0; // i represents the total of successfully created ships
+		while (createdShipsCounts < Fleet.FLEET_SIZE) {
+			IShip ship = readShip(in);
+			if (ship != null) {
+				boolean success = fleet.addShip(ship);
 				if (success)
-					i++;
+					createdShipsCounts++;
 				else
-					LOGGER.info(I18n.get("fleet.create.fail", s.getCategory(), s.getBearing(), s.getPosition()));
+					LOGGER.info(I18n.get("fleet.create.fail", ship.getCategory(), ship.getBearing(), ship.getPosition()));
 			} else {
 				LOGGER.info(I18n.get("fleet.create.unknown_ship"));
 			}
 		}
-		LOGGER.info(I18n.get("fleet.create.success", i));
+		LOGGER.info(I18n.get("fleet.create.success", createdShipsCounts));
 		return fleet;
 	}
 
@@ -203,8 +203,8 @@ public class Tasks {
 
 		String shipKind = in.next();
 		Position pos = readPosition(in);
-		char c = in.next().charAt(0);
-		Compass bearing = Compass.charToCompass(c);
+		char bearingChar = in.next().charAt(0);
+		Compass bearing = Compass.charToCompass(bearingChar);
 		return Ship.buildShip(shipKind, bearing, pos);
 	}
 
