@@ -1,5 +1,6 @@
 package battleship;
 
+import java.util.Locale;
 import java.util.Scanner;
 
 import org.apache.logging.log4j.LogManager;
@@ -94,7 +95,8 @@ public class Tasks {
 				case LANG:
 					String langArg = in.next();
 					I18n.setLocale(langArg);
-					System.out.println(I18n.get("menu.lang_changed", I18n.getLocale().getDisplayLanguage(I18n.getLocale())));
+					Locale currentLocale = I18n.getLocale();
+					System.out.println(I18n.get("menu.lang_changed", currentLocale.getDisplayLanguage(currentLocale)));
 					break;
 				default:
 					System.out.println(I18n.get("menu.unknown_command"));
