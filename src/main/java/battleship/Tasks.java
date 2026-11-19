@@ -178,8 +178,7 @@ public class Tasks {
 		while (createdShipsCounts < Fleet.FLEET_SIZE) {
 			IShip ship = readShip(in);
 			if (ship != null) {
-				boolean success = fleet.addShip(ship);
-				if (success)
+                if (fleet.addShip(ship))
 					createdShipsCounts++;
 				else
 					LOGGER.info(I18n.get("fleet.create.fail", ship.getCategory(), ship.getBearing(), ship.getPosition()));
