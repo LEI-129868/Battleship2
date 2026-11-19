@@ -79,34 +79,10 @@ public class Tasks {
 						game.printMyBoard(false, true);
 					break;
 				case RAJADA:
-					if (game != null) {
-						game.readEnemyFire(in);
-
-						// Imprime o tempo real que demoraste a pensar desde a jogada anterior
-						System.out.printf("Tempo de reflexão nesta jogada: %.2fs (%d ms)%n",
-								reflectionTimeMillis / 1000.0, reflectionTimeMillis);
-
-						myFleet.printStatus();
-						game.printMyBoard(true, false);
-
-						checkGameOver(game);
-					}
+					handleRajada(game, in, reflectionTimeMillis, myFleet);
 					break;
 				case SIMULA:
-					if (game != null) {
-						while (game.getRemainingShips() > 0){
-							game.randomEnemyFire();
-							myFleet.printStatus();
-							game.printMyBoard(true, false);
-							try {
-								Thread.sleep(3000);
-							} catch (InterruptedException e) {
-								Thread.currentThread().interrupt(); // Best practice: restore interrupt status
-							}
-						}
-
-						checkGameOver(game);
-					}
+					handleSimula(game, myFleet);
 					break;
 				case TIROS:
 					if (game != null)
@@ -131,6 +107,38 @@ public class Tasks {
 			command = in.next();
 		}
 		System.out.println(I18n.get("menu.goodbye"));
+	}
+
+	private static void handleSimula(IGame game, IFleet myFleet) {
+		if (game != null) {
+			while (game.getRemainingShips() > 0){
+				game.randomEnemyFire();
+				myFleet.printStatus();
+				game.printMyBoard(true, false);
+				try {
+					Thread.sleep(3000);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt(); // Best practice: restore interrupt status
+				}
+			}
+
+			checkGameOver(game);
+		}
+	}
+
+	private static void handleRajada(IGame game, Scanner in, long reflectionTimeMillis, IFleet myFleet) {
+		if (game != null) {
+			game.readEnemyFire(in);
+
+			// Imprime o tempo real que demoraste a pensar desde a jogada anterior
+			System.out.printf("Tempo de reflexão nesta jogada: %.2fs (%d ms)%n",
+					reflectionTimeMillis / 1000.0, reflectionTimeMillis);
+
+			myFleet.printStatus();
+			game.printMyBoard(true, false);
+
+			checkGameOver(game);
+		}
 	}
 
 	private static void checkGameOver(IGame game) {
