@@ -32,6 +32,9 @@ public class Tasks {
 	private static final String SIMULA = "simula";
 	private static final String IDIOMA = "idioma";
 	private static final String LANG = "lang";
+	public static final String QUIT = "quit";
+	public static final String HELP = "help";
+	public static final int SIMULATION_DELAY_MS = 3000;
 
 	/**
 	 * This task also tests the fighting element of a round of three shots
@@ -49,7 +52,7 @@ public class Tasks {
 		System.out.print("> ");
 		Scanner in = new Scanner(System.in);
 		String command = in.next();
-		while (!command.equals(DESISTIR) && !command.equalsIgnoreCase("quit")) {
+		while (!command.equals(DESISTIR) && !command.equalsIgnoreCase(QUIT)) {
 
 			watch.stop();
 			long reflectionTimeMillis = watch.getTime();
@@ -84,7 +87,7 @@ public class Tasks {
 						game.printMyBoard(true, true);
 					break;
 				case AJUDA:
-				case "help":
+				case HELP:
 					menuHelp();
 					break;
 				case IDIOMA:
@@ -111,7 +114,7 @@ public class Tasks {
 				myFleet.printStatus();
 				game.printMyBoard(true, false);
 				try {
-					Thread.sleep(3000);
+					Thread.sleep(SIMULATION_DELAY_MS);
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt(); // Best practice: restore interrupt status
 				}
