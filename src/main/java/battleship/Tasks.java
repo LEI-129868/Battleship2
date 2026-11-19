@@ -1,5 +1,6 @@
 package battleship;
 
+import java.util.Locale;
 import java.util.Scanner;
 
 import org.apache.logging.log4j.LogManager;
@@ -19,11 +20,6 @@ public class Tasks {
 	private static final Logger LOGGER = LogManager.getLogger(Tasks.class);
 
 	/**
-	 * The constant GOODBYE_MESSAGE.
-	 */
-	private static final String GOODBYE_MESSAGE = "Bons ventos!";
-
-	/**
 	 * Strings to be used by the user
 	 */
 	private static final String AJUDA = "ajuda";
@@ -37,6 +33,9 @@ public class Tasks {
 	private static final String SIMULA = "simula";
 	private static final String IDIOMA = "idioma";
 	private static final String LANG = "lang";
+	public static final String QUIT = "quit";
+	public static final String HELP = "help";
+	public static final int SIMULATION_DELAY_MS = 3000;
 
 	/**
 	 * This task also tests the fighting element of a round of three shots
@@ -54,7 +53,7 @@ public class Tasks {
 		System.out.print("> ");
 		Scanner in = new Scanner(System.in);
 		String command = in.next();
-		while (!command.equals(DESISTIR) && !command.equalsIgnoreCase("quit")) {
+		while (!command.equals(DESISTIR) && !command.equalsIgnoreCase(QUIT)) {
 
 			watch.stop();
 			long reflectionTimeMillis = watch.getTime();
@@ -79,54 +78,25 @@ public class Tasks {
 						game.printMyBoard(false, true);
 					break;
 				case RAJADA:
-					if (game != null) {
-						game.readEnemyFire(in);
-
-						// Imprime o tempo real que demoraste a pensar desde a jogada anterior
-						System.out.printf("Tempo de reflexão nesta jogada: %.2fs (%d ms)%n",
-								reflectionTimeMillis / 1000.0, reflectionTimeMillis);
-
-						myFleet.printStatus();
-						game.printMyBoard(true, false);
-
-						if (game.getRemainingShips() == 0) {
-							game.over();
-							System.exit(0);
-						}
-					}
+					handleRajada(game, in, reflectionTimeMillis, myFleet);
 					break;
 				case SIMULA:
-					if (game != null) {
-						while (game.getRemainingShips() > 0){
-							game.randomEnemyFire();
-							myFleet.printStatus();
-							game.printMyBoard(true, false);
-							try {
-								Thread.sleep(3000);
-							} catch (InterruptedException e) {
-								Thread.currentThread().interrupt(); // Best practice: restore interrupt status
-							}
-						}
-
-						if (game.getRemainingShips() == 0) {
-							game.over();
-							System.exit(0);
-						}
-					}
+					handleSimula(game, myFleet);
 					break;
 				case TIROS:
 					if (game != null)
 						game.printMyBoard(true, true);
 					break;
 				case AJUDA:
-				case "help":
+				case HELP:
 					menuHelp();
 					break;
 				case IDIOMA:
 				case LANG:
 					String langArg = in.next();
 					I18n.setLocale(langArg);
-					System.out.println(I18n.get("menu.lang_changed", I18n.getLocale().getDisplayLanguage(I18n.getLocale())));
+					Locale currentLocale = I18n.getLocale();
+					System.out.println(I18n.get("menu.lang_changed", currentLocale.getDisplayLanguage(currentLocale)));
 					break;
 				default:
 					System.out.println(I18n.get("menu.unknown_command"));
@@ -137,6 +107,45 @@ public class Tasks {
 			command = in.next();
 		}
 		System.out.println(I18n.get("menu.goodbye"));
+	}
+
+	private static void handleSimula(IGame game, IFleet myFleet) {
+		if (game != null) {
+			while (game.getRemainingShips() > 0){
+				game.randomEnemyFire();
+				myFleet.printStatus();
+				game.printMyBoard(true, false);
+				try {
+					Thread.sleep(SIMULATION_DELAY_MS);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt(); // Best practice: restore interrupt status
+				}
+			}
+
+			checkGameOver(game);
+		}
+	}
+
+	private static void handleRajada(IGame game, Scanner in, long reflectionTimeMillis, IFleet myFleet) {
+		if (game != null) {
+			game.readEnemyFire(in);
+
+			// Imprime o tempo real que demoraste a pensar desde a jogada anterior
+			System.out.printf("Tempo de reflexão nesta jogada: %.2fs (%d ms)%n",
+					reflectionTimeMillis / 1000.0, reflectionTimeMillis);
+
+			myFleet.printStatus();
+			game.printMyBoard(true, false);
+
+			checkGameOver(game);
+		}
+	}
+
+	private static void checkGameOver(IGame game) {
+		if (game.getRemainingShips() == 0) {
+			game.over();
+			System.exit(0);
+		}
 	}
 
 	/**
@@ -167,20 +176,19 @@ public class Tasks {
 		assert in != null;
 
 		Fleet fleet = new Fleet();
-		int i = 0; // i represents the total of successfully created ships
-		while (i < Fleet.FLEET_SIZE) {
-			IShip s = readShip(in);
-			if (s != null) {
-				boolean success = fleet.addShip(s);
-				if (success)
-					i++;
+		int createdShipsCounts = 0; // i represents the total of successfully created ships
+		while (createdShipsCounts < Fleet.FLEET_SIZE) {
+			IShip ship = readShip(in);
+			if (ship != null) {
+                if (fleet.addShip(ship))
+					createdShipsCounts++;
 				else
-					LOGGER.info(I18n.get("fleet.create.fail", s.getCategory(), s.getBearing(), s.getPosition()));
+					LOGGER.info(I18n.get("fleet.create.fail", ship.getCategory(), ship.getBearing(), ship.getPosition()));
 			} else {
 				LOGGER.info(I18n.get("fleet.create.unknown_ship"));
 			}
 		}
-		LOGGER.info(I18n.get("fleet.create.success", i));
+		LOGGER.info(I18n.get("fleet.create.success", createdShipsCounts));
 		return fleet;
 	}
 
@@ -196,8 +204,8 @@ public class Tasks {
 
 		String shipKind = in.next();
 		Position pos = readPosition(in);
-		char c = in.next().charAt(0);
-		Compass bearing = Compass.charToCompass(c);
+		char bearingChar = in.next().charAt(0);
+		Compass bearing = Compass.charToCompass(bearingChar);
 		return Ship.buildShip(shipKind, bearing, pos);
 	}
 
