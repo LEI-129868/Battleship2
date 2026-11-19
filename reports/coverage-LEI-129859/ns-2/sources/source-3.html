@@ -1,0 +1,181 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > GameSession</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">restserver</a>
+</div>
+
+<h1>Coverage Summary for Class: GameSession (restserver)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">GameSession</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (10/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (19/19)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package restserver;
+&nbsp;
+&nbsp;import battleship.Fleet;
+&nbsp;import battleship.Game;
+&nbsp;import battleship.IGame;
+&nbsp;
+&nbsp;/**
+&nbsp; * Holds all state for one active game between the AI opponent and a student player.
+&nbsp; *
+&nbsp; * One GameSession is created per registration (m0) and stored in the GameRegistry
+&nbsp; * keyed by its gameId. It wraps the existing Game class without modifying it.
+&nbsp; */
+&nbsp;public class GameSession {
+&nbsp;
+&nbsp;	/** Unique identifier for this game, returned to the student on registration. */
+&nbsp;	private final String gameId;
+&nbsp;
+&nbsp;	/** The student&#39;s name, for logging / display purposes. */
+&nbsp;	private final String playerName;
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * The URL of the student&#39;s server where the AI will POST its shots (m2a).
+&nbsp;	 * Example: &quot;http://student-host:9090&quot;
+&nbsp;	 * The AI will call POST {callbackUrl}/game/{gameId}/shots
+&nbsp;	 */
+&nbsp;	private final String callbackUrl;
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * The core game object from the existing codebase.
+&nbsp;	 * myFleet = AI&#39;s fleet  (receives student&#39;s shots)
+&nbsp;	 * alienFleet = tracked knowledge of student&#39;s fleet
+&nbsp;	 */
+&nbsp;	private final IGame game;
+&nbsp;
+&nbsp;	/** Number of shots fired per turn (matches Game.NUMBER_SHOTS = 3). */
+&nbsp;	private final int shotsPerTurn;
+&nbsp;
+&nbsp;	/** True once one fleet is completely sunk. */
+&nbsp;	private boolean gameOver;
+&nbsp;
+&nbsp;	/** &quot;AI_WINS&quot; or &quot;STUDENT_WINS&quot; — set when gameOver becomes true. */
+&nbsp;	private String winner;
+&nbsp;
+&nbsp;	// -------------------------------------------------------------------------
+&nbsp;
+<b class="fc">&nbsp;	public GameSession(String gameId, String playerName, String callbackUrl) {</b>
+<b class="fc">&nbsp;		this.gameId      = gameId;</b>
+<b class="fc">&nbsp;		this.playerName  = playerName;</b>
+<b class="fc">&nbsp;		this.callbackUrl = callbackUrl;</b>
+<b class="fc">&nbsp;		this.game        = new Game(Fleet.createRandom()); // AI places its own fleet randomly</b>
+<b class="fc">&nbsp;		this.shotsPerTurn = Game.NUMBER_SHOTS;</b>
+<b class="fc">&nbsp;		this.gameOver    = false;</b>
+<b class="fc">&nbsp;		this.winner      = null;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	// ── Getters ──────────────────────────────────────────────────────────────
+&nbsp;
+<b class="fc">&nbsp;	public String getGameId()      { return gameId; }</b>
+<b class="fc">&nbsp;	public String getPlayerName()  { return playerName; }</b>
+<b class="fc">&nbsp;	public String getCallbackUrl() { return callbackUrl; }</b>
+<b class="fc">&nbsp;	public IGame  getGame()        { return game; }</b>
+<b class="fc">&nbsp;	public int    getShotsPerTurn(){ return shotsPerTurn; }</b>
+<b class="fc">&nbsp;	public boolean isGameOver()    { return gameOver; }</b>
+<b class="fc">&nbsp;	public String getWinner()      { return winner; }</b>
+&nbsp;
+&nbsp;	// ── State transitions ────────────────────────────────────────────────────
+&nbsp;
+&nbsp;	public void markAiWins() {
+<b class="fc">&nbsp;		this.gameOver = true;</b>
+<b class="fc">&nbsp;		this.winner   = &quot;AI_WINS&quot;;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	public void markStudentWins() {
+<b class="fc">&nbsp;		this.gameOver = true;</b>
+<b class="fc">&nbsp;		this.winner   = &quot;STUDENT_WINS&quot;;</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-11-19 15:56</div>
+</div>
+</body>
+</html>

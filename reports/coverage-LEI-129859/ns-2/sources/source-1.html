@@ -1,0 +1,250 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AiShotStrategy</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">restserver</a>
+</div>
+
+<h1>Coverage Summary for Class: AiShotStrategy (restserver)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AiShotStrategy</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (64/64)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (47/47)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package restserver;
+&nbsp;
+&nbsp;import battleship.*;
+&nbsp;import org.springframework.stereotype.Component;
+&nbsp;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;/**
+&nbsp; * AI shooting strategy using a Hunt and Target approach.
+&nbsp; *
+&nbsp; * Phase 1 — HUNT:   fire at a checkerboard pattern of cells not yet tried.
+&nbsp; * Phase 2 — TARGET: when a HIT is recorded, attack adjacent cells until the
+&nbsp; *                   ship is SUNK, then revert to HUNT.
+&nbsp; *
+&nbsp; * This is intentionally simple so students can understand and beat it.
+&nbsp; * You can make it harder by replacing the checkerboard hunt with a
+&nbsp; * probability-density map, or easier by using purely random shots.
+&nbsp; */
+&nbsp;@Component
+<b class="fc">&nbsp;public class AiShotStrategy {</b>
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Compute the next set of AI shots based on current game knowledge.
+&nbsp;	 *
+&nbsp;	 * The game object holds alienMoves (AI&#39;s previous shots) which we inspect
+&nbsp;	 * to avoid repeating positions and to identify hit-but-not-sunk cells.
+&nbsp;	 *
+&nbsp;	 * @param game  the current game (used to read past moves and fleet state)
+&nbsp;	 * @return      a list of exactly Game.NUMBER_SHOTS positions
+&nbsp;	 */
+&nbsp;	public List&lt;IPosition&gt; computeShots(IGame game) {
+&nbsp;
+&nbsp;		// Build set of all positions already shot by the AI
+<b class="fc">&nbsp;		Set&lt;IPosition&gt; alreadyShot = new HashSet&lt;&gt;();</b>
+<b class="fc">&nbsp;		for (IMove move : game.getAlienMoves()) {</b>
+<b class="fc">&nbsp;			alreadyShot.addAll(move.getShots());</b>
+&nbsp;		}
+&nbsp;
+&nbsp;		// Collect hit-but-not-sunk positions (TARGET phase candidates)
+<b class="fc">&nbsp;		List&lt;IPosition&gt; hitTargets = getHitButNotSunkPositions(game, alreadyShot);</b>
+&nbsp;
+<b class="fc">&nbsp;		List&lt;IPosition&gt; chosen = new ArrayList&lt;&gt;();</b>
+&nbsp;
+&nbsp;		// ── Phase 2 TARGET: prioritise neighbours of existing hits ──────────
+<b class="fc">&nbsp;		if (!hitTargets.isEmpty()) {</b>
+<b class="fc">&nbsp;			for (IPosition hit : hitTargets) {</b>
+<b class="fc">&nbsp;				if (chosen.size() &gt;= Game.NUMBER_SHOTS) break;</b>
+<b class="fc">&nbsp;				for (IPosition neighbour : hit.adjacentPositions()) {</b>
+<b class="fc">&nbsp;					if (chosen.size() &gt;= Game.NUMBER_SHOTS) break;</b>
+<b class="fc">&nbsp;					if (!alreadyShot.contains(neighbour) &amp;&amp; !chosen.contains(neighbour)) {</b>
+<b class="fc">&nbsp;						chosen.add(neighbour);</b>
+&nbsp;					}
+&nbsp;				}
+&nbsp;			}
+&nbsp;		}
+&nbsp;
+&nbsp;		// ── Phase 1 HUNT: fill remaining slots from checkerboard pattern ────
+<b class="fc">&nbsp;		if (chosen.size() &lt; Game.NUMBER_SHOTS) {</b>
+<b class="fc">&nbsp;			List&lt;IPosition&gt; huntPool = buildHuntPool(alreadyShot, chosen);</b>
+<b class="fc">&nbsp;			Collections.shuffle(huntPool, new Random(System.currentTimeMillis()));</b>
+<b class="fc">&nbsp;			for (IPosition p : huntPool) {</b>
+<b class="fc">&nbsp;				if (chosen.size() &gt;= Game.NUMBER_SHOTS) break;</b>
+<b class="fc">&nbsp;				chosen.add(p);</b>
+&nbsp;			}
+&nbsp;		}
+&nbsp;
+&nbsp;		// Safety fallback: if still not enough shots, pick any unseen cell
+<b class="fc">&nbsp;		if (chosen.size() &lt; Game.NUMBER_SHOTS) {</b>
+<b class="fc">&nbsp;			for (int r = 0; r &lt; Game.BOARD_SIZE &amp;&amp; chosen.size() &lt; Game.NUMBER_SHOTS; r++) {</b>
+<b class="fc">&nbsp;				for (int c = 0; c &lt; Game.BOARD_SIZE &amp;&amp; chosen.size() &lt; Game.NUMBER_SHOTS; c++) {</b>
+<b class="fc">&nbsp;					IPosition p = new Position(r, c);</b>
+<b class="fc">&nbsp;					if (!alreadyShot.contains(p) &amp;&amp; !chosen.contains(p)) {</b>
+<b class="fc">&nbsp;						chosen.add(p);</b>
+&nbsp;					}
+&nbsp;				}
+&nbsp;			}
+&nbsp;		}
+&nbsp;
+<b class="fc">&nbsp;		System.out.print(&quot;[AI] Firing: &quot;);</b>
+<b class="fc">&nbsp;		chosen.forEach(p -&gt; System.out.print(p + &quot; &quot;));</b>
+<b class="fc">&nbsp;		System.out.println();</b>
+&nbsp;
+<b class="fc">&nbsp;		return chosen;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	// ── Private helpers ───────────────────────────────────────────────────────
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Returns positions the AI has HIT in a previous move but the ship is not yet sunk.
+&nbsp;	 * We detect &quot;sunk&quot; by looking at whether all adjacent positions of a hit cluster
+&nbsp;	 * have also been hit — in the absence of a direct reference to the student&#39;s fleet,
+&nbsp;	 * we use a simple heuristic: a position is a &quot;live target&quot; if it was hit and at
+&nbsp;	 * least one of its orthogonal neighbours has NOT been shot yet.
+&nbsp;	 */
+&nbsp;	private List&lt;IPosition&gt; getHitButNotSunkPositions(IGame game, Set&lt;IPosition&gt; alreadyShot) {
+&nbsp;
+&nbsp;		// Gather all positions the AI hit
+<b class="fc">&nbsp;		List&lt;IPosition&gt; hits = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;		for (IMove move : game.getAlienMoves()) {</b>
+<b class="fc">&nbsp;			for (int i = 0; i &lt; move.getShots().size(); i++) {</b>
+<b class="fc">&nbsp;				IGame.ShotResult result = move.getShotResults().isEmpty()</b>
+<b class="fc">&nbsp;						? null</b>
+<b class="fc">&nbsp;						: (i &lt; move.getShotResults().size() ? move.getShotResults().get(i) : null);</b>
+&nbsp;
+&nbsp;				// If we have result metadata, use it precisely
+<b class="fc">&nbsp;				if (result != null &amp;&amp; result.valid() &amp;&amp; !result.repeated()</b>
+<b class="fc">&nbsp;						&amp;&amp; result.ship() != null &amp;&amp; !result.sunk()) {</b>
+<b class="fc">&nbsp;					hits.add(move.getShots().get(i));</b>
+&nbsp;				}
+&nbsp;			}
+&nbsp;		}
+<b class="fc">&nbsp;		return hits;</b>
+&nbsp;	}
+&nbsp;
+&nbsp;	/**
+&nbsp;	 * Builds a checkerboard-patterned pool of candidate positions for the HUNT phase.
+&nbsp;	 * Using only cells where (row + col) % 2 == 0 means minimum ship size 2
+&nbsp;	 * (Barca) will always intersect at least one cell — halves the search space.
+&nbsp;	 */
+&nbsp;	private List&lt;IPosition&gt; buildHuntPool(Set&lt;IPosition&gt; alreadyShot, List&lt;IPosition&gt; alreadyChosen) {
+<b class="fc">&nbsp;		List&lt;IPosition&gt; pool = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;		for (int r = 0; r &lt; Game.BOARD_SIZE; r++) {</b>
+<b class="fc">&nbsp;			for (int c = 0; c &lt; Game.BOARD_SIZE; c++) {</b>
+<b class="fc">&nbsp;				if ((r + c) % 2 == 0) {</b>
+<b class="fc">&nbsp;					IPosition p = new Position(r, c);</b>
+<b class="fc">&nbsp;					if (!alreadyShot.contains(p) &amp;&amp; !alreadyChosen.contains(p)) {</b>
+<b class="fc">&nbsp;						pool.add(p);</b>
+&nbsp;					}
+&nbsp;				}
+&nbsp;			}
+&nbsp;		}
+<b class="fc">&nbsp;		return pool;</b>
+&nbsp;	}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-11-19 15:56</div>
+</div>
+</body>
+</html>
