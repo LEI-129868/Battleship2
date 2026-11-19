@@ -11,13 +11,12 @@ Ficha laboratorial nº 4, Parte 2. Cada membro aplica 7 refabricações de tipos
 | `Tasks::buildFleet`, `Tasks::readShip` (variáveis `s`, `c`, `i`) | Nomes pouco expressivos | Rename | 129822 |
 | `Tasks::buildFleet` (variável `success`) | Variável temporária redundante | Inline Variable | 129822 |
 | `Tasks::menu` (`I18n.getLocale()` repetido no caso `IDIOMA`) | Expressão repetida | Introduce Variable | 129822 |
-| `Fleet::getFloatingShips`, `Fleet::getSunkShips`, `Fleet::getShipsLike` | Duplicated Code | Extract Method | 129836 |
-| `Frigate` → `Ship` (método de preenchimento linear extraído) | Duplicated Code (entre subclasses) | Pull Members Up | 129836 |
-| `Caravel`, `Carrack` (construtores) | Duplicated Code | Find and Replace Code Duplicates | 129836 |
+| `Fleet::getShipsLike` (variável `shipsLike`) | Nome pouco expressivo | Rename | 129836 |
+| `Fleet::addShip` (condição `canAddShip`) | Condição complexa | Introduce Variable | 129836 |
+| `Fleet::createRandom` (método `createRandomShip`) | Responsabilidades misturadas | Extract Method | 129836 |
 | `Ship::positions` (campo `protected`) | Data exposure / Inappropriate Intimacy | Encapsulate Fields | 129836 |
-| `Fleet::printAllShips`, `Fleet::printFloatingShips`, `Fleet::printShipsByCategory` | Speculative Generality (código morto) | Safe Delete | 129836 |
-| `Fleet::colisionRisk` | Nome com erro ortográfico | Rename | 129836 |
-| `Ship::isInsideBoard` | Condição complexa | Introduce Variable | 129836 |
+| `Frigate::Frigate` (casos `NORTH` e `SOUTH`) | Duplicated Code | Find and Replace Code Duplicates | 129836 |
+| `Frigate`, `Caravel`, `Carrack` → `Ship` (método `addVerticalPositions`) | Duplicated Code entre subclasses | Pull Members Up | 129836 |
 | `Move::processEnemyFire` (construção da mensagem e do JSON) | Long Method | Extract Method | 129859 |
 | `Move::processEnemyFire` (`validShots`, `repeatedShots`, `missedShots`, `outsideShots`) | Long Parameter List / Data Clumps | Introduce Parameter Object | 129859 |
 | `Move::processEnemyFire` (`result.ship()` repetido) | Expressão repetida / Message Chains | Introduce Variable | 129859 |

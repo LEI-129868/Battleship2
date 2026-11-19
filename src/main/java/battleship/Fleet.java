@@ -35,7 +35,7 @@ public class Fleet implements IFleet
 		while (fleetSize < shipTypes.length) {
 
 			// Build the ship
-			Ship ship = Ship.buildShip(shipTypes[fleetSize], Compass.randomBearing(), Position.randomPosition());
+			Ship ship = createRandomShip(shipTypes[fleetSize]);
 
 			// Attempt to add the ship to the fleet
 			if (ship != null && randomFleet.addShip(ship)) {
@@ -45,8 +45,13 @@ public class Fleet implements IFleet
 		return randomFleet;
 	}
 
+	private static Ship createRandomShip(String shipTypes) {
+		return Ship.buildShip(shipTypes, Compass.randomBearing(), Position.randomPosition());
 
-    // -----------------------------------------------------
+	}
+
+
+	// -----------------------------------------------------
 
 	/**
 	 * The Ships.
@@ -90,7 +95,8 @@ public class Fleet implements IFleet
 		assert s != null;
 
 		boolean result = false;
-		if ((ships.size() <= FLEET_SIZE) && (s.isInsideBoard()) && (!colisionRisk(s)))
+		boolean canAddShip = (ships.size() <= FLEET_SIZE) && (s.isInsideBoard()) && (!colisionRisk(s));
+		if (canAddShip)
 		{
 			ships.add(s);
 			result = true;
@@ -114,12 +120,12 @@ public class Fleet implements IFleet
     {
 		assert category != null;
 
-		List<IShip> shipsLike = new ArrayList<IShip>();
+		List<IShip> matchingShips = new ArrayList<IShip>();
 		for (IShip s : ships)
 			if (s.getCategory().equals(category))
-				shipsLike.add(s);
+				matchingShips.add(s);
 
-		return shipsLike;
+		return matchingShips;
     }
 
 	/**
