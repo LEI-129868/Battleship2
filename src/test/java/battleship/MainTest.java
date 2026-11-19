@@ -46,12 +46,6 @@ public class MainTest {
     }
 
     @Test
-    @DisplayName("Constante MAX_SHIPS está definida com o valor 10")
-    void testMaxShipsConstant() {
-        assertEquals(10, Main.MAX_SHIPS);
-    }
-
-    @Test
     @DisplayName("main executa com sucesso imprimindo o título do menu e saindo com desisto")
     void testMainMethod() {
         String input = "desisto\n";

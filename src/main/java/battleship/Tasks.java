@@ -19,11 +19,6 @@ public class Tasks {
 	private static final Logger LOGGER = LogManager.getLogger(Tasks.class);
 
 	/**
-	 * The constant GOODBYE_MESSAGE.
-	 */
-	private static final String GOODBYE_MESSAGE = "Bons ventos!";
-
-	/**
 	 * Strings to be used by the user
 	 */
 	private static final String AJUDA = "ajuda";
