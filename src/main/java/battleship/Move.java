@@ -92,12 +92,13 @@ public class Move implements IMove {
 			else {
 				// Tiro válido
 				validShots++;
-				if (result.ship() == null)
+				IShip ship = result.ship();
+				if (ship == null)
 					missedShots++; // Tiro na água
 				else {
-					String boatName = result.ship().getCategory();
+					String boatName = ship.getCategory();
 
-					if (result.ship().stillFloating()) {
+					if (ship.stillFloating()) {
 						hitsPerBoat.put(
 								boatName, hitsPerBoat.getOrDefault(boatName, 0) + 1
 						);
@@ -189,13 +190,14 @@ public class Move implements IMove {
 		// Criar a lista de barcos afundados
 		List<Map<String, Object>> sunkBoats = new ArrayList<>();
 		for (IGame.ShotResult result : this.shotResults) {
+			IShip ship = result.ship();
 			if (result.valid() && !result.repeated()
-					&& result.ship() != null && result.sunk()) {
+					&& ship != null && result.sunk()) {
 
 				Map<String, Object> boat = new HashMap<>();
-				boat.put("type", result.ship().getCategory());
+				boat.put("type", ship.getCategory());
 				boat.put("count", 1);
-				boat.put("cords", result.ship().getPositions().stream()
+				boat.put("cords", ship.getPositions().stream()
 						.map(pos -> "" + pos.getClassicRow()
 								+ pos.getClassicColumn())
 						.toList());
