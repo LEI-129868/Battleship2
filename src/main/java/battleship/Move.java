@@ -15,6 +15,18 @@ import java.util.*;
  */
 public class Move implements IMove {
 
+	// Chaves do JSON devolvido por processEnemyFire
+	private static final String KEY_VALID_SHOTS = "validShots";
+	private static final String KEY_OUTSIDE_SHOTS = "outsideShots";
+	private static final String KEY_REPEATED_SHOTS = "repeatedShots";
+	private static final String KEY_MISSED_SHOTS = "missedShots";
+	private static final String KEY_SUNK_BOATS = "sunkBoats";
+	private static final String KEY_HITS_ON_BOATS = "hitsOnBoats";
+	private static final String KEY_TYPE = "type";
+	private static final String KEY_COUNT = "count";
+	private static final String KEY_HITS = "hits";
+	private static final String KEY_CORDS = "cords";
+
 	//-------------------------------------------------------------------
 	private final int number;
 	private final List<IPosition> shots;
@@ -182,10 +194,10 @@ public class Move implements IMove {
 
 		// Criar o mapa para o JSON
 		Map<String, Object> response = new HashMap<>();
-		response.put("validShots", validShots);
-		response.put("outsideShots", outsideShots);
-		response.put("repeatedShots", repeatedShots);
-		response.put("missedShots", missedShots);
+		response.put(KEY_VALID_SHOTS, validShots);
+		response.put(KEY_OUTSIDE_SHOTS, outsideShots);
+		response.put(KEY_REPEATED_SHOTS, repeatedShots);
+		response.put(KEY_MISSED_SHOTS, missedShots);
 
 		// Criar a lista de barcos afundados
 		List<Map<String, Object>> sunkBoats = new ArrayList<>();
@@ -195,9 +207,9 @@ public class Move implements IMove {
 					&& ship != null && result.sunk()) {
 
 				Map<String, Object> boat = new HashMap<>();
-				boat.put("type", ship.getCategory());
-				boat.put("count", 1);
-				boat.put("cords", ship.getPositions().stream()
+				boat.put(KEY_TYPE, ship.getCategory());
+				boat.put(KEY_COUNT, 1);
+				boat.put(KEY_CORDS, ship.getPositions().stream()
 						.map(pos -> "" + pos.getClassicRow()
 								+ pos.getClassicColumn())
 						.toList());
@@ -205,18 +217,18 @@ public class Move implements IMove {
 				sunkBoats.add(boat);
 			}
 		}
-		response.put("sunkBoats", sunkBoats);
+		response.put(KEY_SUNK_BOATS, sunkBoats);
 
 		// Criar a lista de acertos em barcos que não foram afundados
 		List<Map<String, Object>> boatHits = new ArrayList<>();
 		for (Map.Entry<String, Integer> entry : hitsPerBoat.entrySet()) {
 			Map<String, Object> boat = new HashMap<>();
-			boat.put("type", entry.getKey());
-			boat.put("hits", entry.getValue());
-			boat.put("cords", coordinatesPerBoat.get(entry.getKey()));
+			boat.put(KEY_TYPE, entry.getKey());
+			boat.put(KEY_HITS, entry.getValue());
+			boat.put(KEY_CORDS, coordinatesPerBoat.get(entry.getKey()));
 			boatHits.add(boat);
 		}
-		response.put("hitsOnBoats", boatHits);
+		response.put(KEY_HITS_ON_BOATS, boatHits);
 
 		// Serializar o JSON utilizando Jackson
 		String jsonString;
