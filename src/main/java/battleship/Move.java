@@ -15,6 +15,12 @@ import java.util.*;
  */
 public class Move implements IMove {
 
+	/**
+	 * Contadores dos tiros de uma jogada (válidos, repetidos, na água e exteriores).
+	 */
+	private record ShotCounts(int valid, int repeated, int missed, int outside) {
+	}
+
 	// Chaves do JSON devolvido por processEnemyFire
 	private static final String KEY_VALID_SHOTS = "validShots";
 	private static final String KEY_OUTSIDE_SHOTS = "outsideShots";
@@ -135,16 +141,16 @@ public class Move implements IMove {
 		// Determinar número de tiros fora do tabuleiro
 		int outsideShots = Game.NUMBER_SHOTS - validShots - repeatedShots;
 
+		ShotCounts counts = new ShotCounts(validShots, repeatedShots, missedShots, outsideShots);
+
 		if (verbose) {
 			// Imprimir na consola se verbose for true
-			String summary = buildRoundSummary(validShots, repeatedShots, missedShots, outsideShots,
-					sunkBoatsCount, hitsPerBoat);
+			String summary = buildRoundSummary(counts, sunkBoatsCount, hitsPerBoat);
 			System.out.println(I18n.get("move.round_prefix", this.number, summary));
 		}
 
 		// Criar o mapa para o JSON
-		Map<String, Object> response = buildJsonResponse(validShots, outsideShots, repeatedShots, missedShots,
-				hitsPerBoat, coordinatesPerBoat);
+		Map<String, Object> response = buildJsonResponse(counts, hitsPerBoat, coordinatesPerBoat);
 
 		// Serializar o JSON utilizando Jackson
 		String jsonString;
@@ -169,16 +175,16 @@ public class Move implements IMove {
 	/**
 	 * Builds the human-readable summary of a round (used in verbose mode).
 	 */
-	private static String buildRoundSummary(int validShots, int repeatedShots, int missedShots, int outsideShots,
+	private static String buildRoundSummary(ShotCounts counts,
 			Map<String, Integer> sunkBoatsCount, Map<String, Integer> hitsPerBoat) {
 		// Construção da mensagem de saída
 		StringBuilder output = new StringBuilder();
 
-		if (validShots == 0 && repeatedShots > 0) {
-			output.append(I18n.get("move.repeated", repeatedShots));
+		if (counts.valid() == 0 && counts.repeated() > 0) {
+			output.append(I18n.get("move.repeated", counts.repeated()));
 		} else {
-			if (validShots > 0) {
-				output.append(I18n.get("move.valid", validShots));
+			if (counts.valid() > 0) {
+				output.append(I18n.get("move.valid", counts.valid()));
 			}
 
 			// Atualizar lógica para contar múltiplos barcos afundados do mesmo tipo
@@ -201,26 +207,26 @@ public class Move implements IMove {
 				}
 			}
 
-			if (missedShots > 0) {
-				output.append(I18n.get("move.miss", missedShots));
+			if (counts.missed() > 0) {
+				output.append(I18n.get("move.miss", counts.missed()));
 			} else if (!sunkBoatsCount.isEmpty() || !hitsPerBoat.isEmpty()) {
 				output.setLength(output.length() - 2); // Remover o "+" final
 			}
 
-			if (repeatedShots > 0) {
-				if (validShots > 0) {
+			if (counts.repeated() > 0) {
+				if (counts.valid() > 0) {
 					output.append(", ");
 				}
-				output.append(I18n.get("move.repeated", repeatedShots));
+				output.append(I18n.get("move.repeated", counts.repeated()));
 			}
 		}
 
 		// Adicionar contagem de tiros fora do tabuleiro
-		if (outsideShots > 0) {
+		if (counts.outside() > 0) {
 			if (!output.isEmpty()) {
 				output.append(", ");
 			}
-			output.append(I18n.get("move.outside", outsideShots));
+			output.append(I18n.get("move.outside", counts.outside()));
 		}
 
 		return output.toString();
@@ -229,13 +235,13 @@ public class Move implements IMove {
 	/**
 	 * Builds the map that is serialized as the JSON result of a round.
 	 */
-	private Map<String, Object> buildJsonResponse(int validShots, int outsideShots, int repeatedShots, int missedShots,
+	private Map<String, Object> buildJsonResponse(ShotCounts counts,
 			Map<String, Integer> hitsPerBoat, Map<String, List<String>> coordinatesPerBoat) {
 		Map<String, Object> response = new HashMap<>();
-		response.put(KEY_VALID_SHOTS, validShots);
-		response.put(KEY_OUTSIDE_SHOTS, outsideShots);
-		response.put(KEY_REPEATED_SHOTS, repeatedShots);
-		response.put(KEY_MISSED_SHOTS, missedShots);
+		response.put(KEY_VALID_SHOTS, counts.valid());
+		response.put(KEY_OUTSIDE_SHOTS, counts.outside());
+		response.put(KEY_REPEATED_SHOTS, counts.repeated());
+		response.put(KEY_MISSED_SHOTS, counts.missed());
 
 		// Criar a lista de barcos afundados
 		List<Map<String, Object>> sunkBoats = new ArrayList<>();
