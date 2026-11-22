@@ -38,17 +38,11 @@ public class Move implements IMove {
 	private final List<IPosition> shots;
 	private final List<IGame.ShotResult> shotResults;
 
-	// Novo campo para guardar o tempo de reflexão (em milissegundos)
-	private long durationMillis;
-
 	//-------------------------------------------------------------------
 	public Move(int moveNumber, List<IPosition> moveShots, List<IGame.ShotResult> moveResults) {
 		this.number = moveNumber;
 		this.shots = moveShots;
 		this.shotResults = moveResults;
-
-		//Inicializa o tempo de reflexão
-		this.durationMillis = 0;
 	}
 
 	@Override
@@ -275,17 +269,5 @@ public class Move implements IMove {
 		response.put(KEY_HITS_ON_BOATS, boatHits);
 
 		return response;
-	}
-
-	public long getDurationMillis() {
-		return durationMillis;
-	}
-
-	public void setDurationMillis(long durationMillis) {
-		this.durationMillis = durationMillis;
-	}
-
-	public double getDurationInSeconds() {
-		return durationMillis / 1000.0;
 	}
 }

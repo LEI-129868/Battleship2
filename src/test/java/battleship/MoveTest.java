@@ -26,9 +26,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * - getShots(): 1
  * - getShotResults(): 1
  * - processEnemyFire(): 30
- * - getDurationMillis(): 1
- * - setDurationMillis(): 1
- * - getDurationInSeconds(): 1
  */
 class MoveTest {
 
@@ -135,7 +132,7 @@ class MoveTest {
 	// ── constructor & simple accessors ───────────────────────────────────────
 
 	@Test
-	@DisplayName("constructor: guarda número, tiros e resultados e inicia a duração a 0")
+	@DisplayName("constructor: guarda número, tiros e resultados")
 	void constructor() {
 		List<IPosition> shots = positions(0, 0);
 		List<IGame.ShotResult> results = List.of(water());
@@ -144,8 +141,7 @@ class MoveTest {
 		assertAll("Estado inicial",
 				() -> assertEquals(7, m.getNumber(), "Error: expected number 7 but got " + m.getNumber()),
 				() -> assertSame(shots, m.getShots(), "Error: expected the same shots list but got another one"),
-				() -> assertSame(results, m.getShotResults(), "Error: expected the same results list but got another one"),
-				() -> assertEquals(0L, m.getDurationMillis(), "Error: expected duration 0 but got " + m.getDurationMillis()));
+				() -> assertSame(results, m.getShotResults(), "Error: expected the same results list but got another one"));
 	}
 
 	@Test
@@ -179,29 +175,6 @@ class MoveTest {
 		Move m = new Move(2, positions(3, 3), results);
 
 		assertSame(results, m.getShotResults(), "Error: expected the same results list but got " + m.getShotResults());
-	}
-
-	@Test
-	@DisplayName("getDurationMillis: é 0 numa jogada acabada de criar")
-	void getDurationMillis() {
-		assertEquals(0L, move.getDurationMillis(), "Error: expected 0 ms but got " + move.getDurationMillis());
-	}
-
-	@Test
-	@DisplayName("setDurationMillis: altera a duração da jogada")
-	void setDurationMillis() {
-		move.setDurationMillis(1500L);
-
-		assertEquals(1500L, move.getDurationMillis(), "Error: expected 1500 ms but got " + move.getDurationMillis());
-	}
-
-	@Test
-	@DisplayName("getDurationInSeconds: converte milissegundos em segundos (1500 ms = 1.5 s)")
-	void getDurationInSeconds() {
-		move.setDurationMillis(1500L);
-
-		assertEquals(1.5, move.getDurationInSeconds(), 0.0001,
-				"Error: expected 1.5 s but got " + move.getDurationInSeconds());
 	}
 
 	// ── processEnemyFire ─────────────────────────────────────────────────────
