@@ -136,63 +136,101 @@ public class Move implements IMove {
 		int outsideShots = Game.NUMBER_SHOTS - validShots - repeatedShots;
 
 		if (verbose) {
-			// Construção da mensagem de saída
-			StringBuilder output = new StringBuilder();
-
-			if (validShots == 0 && repeatedShots > 0) {
-				output.append(I18n.get("move.repeated", repeatedShots));
-			} else {
-				if (validShots > 0) {
-					output.append(I18n.get("move.valid", validShots));
-				}
-
-				// Atualizar lógica para contar múltiplos barcos afundados do mesmo tipo
-				if (!sunkBoatsCount.isEmpty()) {
-					for (Map.Entry<String, Integer> entry : sunkBoatsCount.entrySet()) {
-						String boatName = entry.getKey();
-						int count = entry.getValue();
-						String localizedBoat = I18n.getShipCategory(boatName);
-						output.append(I18n.get("move.sunk", count, localizedBoat)).append(" + ");
-					}
-				}
-
-				if (!hitsPerBoat.isEmpty()) {
-					for (Map.Entry<String, Integer> entry : hitsPerBoat.entrySet()) {
-						String boatName = entry.getKey();
-						int hits = entry.getValue();
-						String localizedBoat = I18n.getShipCategory(boatName);
-						output.append(I18n.get("move.hit", hits, localizedBoat)).append(" + ");
-
-					}
-				}
-
-				if (missedShots > 0) {
-					output.append(I18n.get("move.miss", missedShots));
-				} else if (!sunkBoatsCount.isEmpty() || !hitsPerBoat.isEmpty()) {
-					output.setLength(output.length() - 2); // Remover o "+" final
-				}
-
-				if (repeatedShots > 0) {
-					if (validShots > 0) {
-						output.append(", ");
-					}
-					output.append(I18n.get("move.repeated", repeatedShots));
-				}
-			}
-
-			// Adicionar contagem de tiros fora do tabuleiro
-			if (outsideShots > 0) {
-				if (!output.isEmpty()) {
-					output.append(", ");
-				}
-				output.append(I18n.get("move.outside", outsideShots));
-			}
-
 			// Imprimir na consola se verbose for true
-			System.out.println(I18n.get("move.round_prefix", this.number, output));
+			String summary = buildRoundSummary(validShots, repeatedShots, missedShots, outsideShots,
+					sunkBoatsCount, hitsPerBoat);
+			System.out.println(I18n.get("move.round_prefix", this.number, summary));
 		}
 
 		// Criar o mapa para o JSON
+		Map<String, Object> response = buildJsonResponse(validShots, outsideShots, repeatedShots, missedShots,
+				hitsPerBoat, coordinatesPerBoat);
+
+		// Serializar o JSON utilizando Jackson
+		String jsonString;
+
+		// Serializar os tiros gerados em JSON usando a biblioteca Jackson
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+
+		try {
+			jsonString = objectMapper.writeValueAsString(response);
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException("Erro ao serializar o JSON dos resultados da jogada", e);
+		}
+
+		System.out.println(jsonString);
+		System.out.println();
+
+		// Retornar o JSON
+		return jsonString;
+	}
+
+	/**
+	 * Builds the human-readable summary of a round (used in verbose mode).
+	 */
+	private static String buildRoundSummary(int validShots, int repeatedShots, int missedShots, int outsideShots,
+			Map<String, Integer> sunkBoatsCount, Map<String, Integer> hitsPerBoat) {
+		// Construção da mensagem de saída
+		StringBuilder output = new StringBuilder();
+
+		if (validShots == 0 && repeatedShots > 0) {
+			output.append(I18n.get("move.repeated", repeatedShots));
+		} else {
+			if (validShots > 0) {
+				output.append(I18n.get("move.valid", validShots));
+			}
+
+			// Atualizar lógica para contar múltiplos barcos afundados do mesmo tipo
+			if (!sunkBoatsCount.isEmpty()) {
+				for (Map.Entry<String, Integer> entry : sunkBoatsCount.entrySet()) {
+					String boatName = entry.getKey();
+					int count = entry.getValue();
+					String localizedBoat = I18n.getShipCategory(boatName);
+					output.append(I18n.get("move.sunk", count, localizedBoat)).append(" + ");
+				}
+			}
+
+			if (!hitsPerBoat.isEmpty()) {
+				for (Map.Entry<String, Integer> entry : hitsPerBoat.entrySet()) {
+					String boatName = entry.getKey();
+					int hits = entry.getValue();
+					String localizedBoat = I18n.getShipCategory(boatName);
+					output.append(I18n.get("move.hit", hits, localizedBoat)).append(" + ");
+
+				}
+			}
+
+			if (missedShots > 0) {
+				output.append(I18n.get("move.miss", missedShots));
+			} else if (!sunkBoatsCount.isEmpty() || !hitsPerBoat.isEmpty()) {
+				output.setLength(output.length() - 2); // Remover o "+" final
+			}
+
+			if (repeatedShots > 0) {
+				if (validShots > 0) {
+					output.append(", ");
+				}
+				output.append(I18n.get("move.repeated", repeatedShots));
+			}
+		}
+
+		// Adicionar contagem de tiros fora do tabuleiro
+		if (outsideShots > 0) {
+			if (!output.isEmpty()) {
+				output.append(", ");
+			}
+			output.append(I18n.get("move.outside", outsideShots));
+		}
+
+		return output.toString();
+	}
+
+	/**
+	 * Builds the map that is serialized as the JSON result of a round.
+	 */
+	private Map<String, Object> buildJsonResponse(int validShots, int outsideShots, int repeatedShots, int missedShots,
+			Map<String, Integer> hitsPerBoat, Map<String, List<String>> coordinatesPerBoat) {
 		Map<String, Object> response = new HashMap<>();
 		response.put(KEY_VALID_SHOTS, validShots);
 		response.put(KEY_OUTSIDE_SHOTS, outsideShots);
@@ -230,24 +268,7 @@ public class Move implements IMove {
 		}
 		response.put(KEY_HITS_ON_BOATS, boatHits);
 
-		// Serializar o JSON utilizando Jackson
-		String jsonString;
-
-		// Serializar os tiros gerados em JSON usando a biblioteca Jackson
-		ObjectMapper objectMapper = new ObjectMapper();
-		objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-
-		try {
-			jsonString = objectMapper.writeValueAsString(response);
-		} catch (JsonProcessingException e) {
-			throw new RuntimeException("Erro ao serializar o JSON dos resultados da jogada", e);
-		}
-
-		System.out.println(jsonString);
-		System.out.println();
-
-		// Retornar o JSON
-		return jsonString;
+		return response;
 	}
 
 	public long getDurationMillis() {
