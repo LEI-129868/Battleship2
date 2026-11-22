@@ -77,7 +77,7 @@ public class Move implements IMove {
 
 		Map<String, Integer> sunkBoatsCount = new HashMap<>(); // Rastrear quantos navios de cada tipo afundaram
 		Map<String, Integer> hitsPerBoat = new HashMap<>();
-		Map<String, List<String>> cordsPerBoat = new HashMap<>();
+		Map<String, List<String>> coordinatesPerBoat = new HashMap<>();
 
 		// Processar cada resultado de tiro
 		for (int i = 0; i < this.shotResults.size(); i++) {
@@ -103,12 +103,12 @@ public class Move implements IMove {
 						);
 
 						IPosition shot = this.shots.get(i);
-						String cord = "" + shot.getClassicRow()
+						String coordinate = "" + shot.getClassicRow()
 								+ shot.getClassicColumn();
 
-						cordsPerBoat
+						coordinatesPerBoat
 								.computeIfAbsent(boatName, key -> new ArrayList<>())
-								.add(cord);
+								.add(coordinate);
 					}
 
 					if (result.sunk())
@@ -211,7 +211,7 @@ public class Move implements IMove {
 			Map<String, Object> boat = new HashMap<>();
 			boat.put("type", entry.getKey());
 			boat.put("hits", entry.getValue());
-			boat.put("cords", cordsPerBoat.get(entry.getKey()));
+			boat.put("cords", coordinatesPerBoat.get(entry.getKey()));
 			boatHits.add(boat);
 		}
 		response.put("hitsOnBoats", boatHits);
