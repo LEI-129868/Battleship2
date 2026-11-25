@@ -15,22 +15,34 @@ import java.util.*;
  */
 public class Move implements IMove {
 
+	/**
+	 * Contadores dos tiros de uma jogada (válidos, repetidos, na água e exteriores).
+	 */
+	private record ShotCounts(int valid, int repeated, int missed, int outside) {
+	}
+
+	// Chaves do JSON devolvido por processEnemyFire
+	private static final String KEY_VALID_SHOTS = "validShots";
+	private static final String KEY_OUTSIDE_SHOTS = "outsideShots";
+	private static final String KEY_REPEATED_SHOTS = "repeatedShots";
+	private static final String KEY_MISSED_SHOTS = "missedShots";
+	private static final String KEY_SUNK_BOATS = "sunkBoats";
+	private static final String KEY_HITS_ON_BOATS = "hitsOnBoats";
+	private static final String KEY_TYPE = "type";
+	private static final String KEY_COUNT = "count";
+	private static final String KEY_HITS = "hits";
+	private static final String KEY_CORDS = "cords";
+
 	//-------------------------------------------------------------------
 	private final int number;
 	private final List<IPosition> shots;
 	private final List<IGame.ShotResult> shotResults;
-
-	// Novo campo para guardar o tempo de reflexão (em milissegundos)
-	private long durationMillis;
 
 	//-------------------------------------------------------------------
 	public Move(int moveNumber, List<IPosition> moveShots, List<IGame.ShotResult> moveResults) {
 		this.number = moveNumber;
 		this.shots = moveShots;
 		this.shotResults = moveResults;
-
-		//Inicializa o tempo de reflexão
-		this.durationMillis = 0;
 	}
 
 	@Override
@@ -77,7 +89,7 @@ public class Move implements IMove {
 
 		Map<String, Integer> sunkBoatsCount = new HashMap<>(); // Rastrear quantos navios de cada tipo afundaram
 		Map<String, Integer> hitsPerBoat = new HashMap<>();
-		Map<String, List<String>> cordsPerBoat = new HashMap<>();
+		Map<String, List<String>> coordinatesPerBoat = new HashMap<>();
 
 		// Processar cada resultado de tiro
 		for (int i = 0; i < this.shotResults.size(); i++) {
@@ -92,23 +104,24 @@ public class Move implements IMove {
 			else {
 				// Tiro válido
 				validShots++;
-				if (result.ship() == null)
+				IShip ship = result.ship();
+				if (ship == null)
 					missedShots++; // Tiro na água
 				else {
-					String boatName = result.ship().getCategory();
+					String boatName = ship.getCategory();
 
-					if (result.ship().stillFloating()) {
+					if (ship.stillFloating()) {
 						hitsPerBoat.put(
 								boatName, hitsPerBoat.getOrDefault(boatName, 0) + 1
 						);
 
 						IPosition shot = this.shots.get(i);
-						String cord = "" + shot.getClassicRow()
+						String coordinate = "" + shot.getClassicRow()
 								+ shot.getClassicColumn();
 
-						cordsPerBoat
+						coordinatesPerBoat
 								.computeIfAbsent(boatName, key -> new ArrayList<>())
-								.add(cord);
+								.add(coordinate);
 					}
 
 					if (result.sunk())
@@ -122,99 +135,16 @@ public class Move implements IMove {
 		// Determinar número de tiros fora do tabuleiro
 		int outsideShots = Game.NUMBER_SHOTS - validShots - repeatedShots;
 
+		ShotCounts counts = new ShotCounts(validShots, repeatedShots, missedShots, outsideShots);
+
 		if (verbose) {
-			// Construção da mensagem de saída
-			StringBuilder output = new StringBuilder();
-
-			if (validShots == 0 && repeatedShots > 0) {
-				output.append(I18n.get("move.repeated", repeatedShots));
-			} else {
-				if (validShots > 0) {
-					output.append(I18n.get("move.valid", validShots));
-				}
-
-				// Atualizar lógica para contar múltiplos barcos afundados do mesmo tipo
-				if (!sunkBoatsCount.isEmpty()) {
-					for (Map.Entry<String, Integer> entry : sunkBoatsCount.entrySet()) {
-						String boatName = entry.getKey();
-						int count = entry.getValue();
-						String localizedBoat = I18n.getShipCategory(boatName);
-						output.append(I18n.get("move.sunk", count, localizedBoat)).append(" + ");
-					}
-				}
-
-				if (!hitsPerBoat.isEmpty()) {
-					for (Map.Entry<String, Integer> entry : hitsPerBoat.entrySet()) {
-						String boatName = entry.getKey();
-						int hits = entry.getValue();
-						String localizedBoat = I18n.getShipCategory(boatName);
-						output.append(I18n.get("move.hit", hits, localizedBoat)).append(" + ");
-
-					}
-				}
-
-				if (missedShots > 0) {
-					output.append(I18n.get("move.miss", missedShots));
-				} else if (!sunkBoatsCount.isEmpty() || !hitsPerBoat.isEmpty()) {
-					output.setLength(output.length() - 2); // Remover o "+" final
-				}
-
-				if (repeatedShots > 0) {
-					if (validShots > 0) {
-						output.append(", ");
-					}
-					output.append(I18n.get("move.repeated", repeatedShots));
-				}
-			}
-
-			// Adicionar contagem de tiros fora do tabuleiro
-			if (outsideShots > 0) {
-				if (!output.isEmpty()) {
-					output.append(", ");
-				}
-				output.append(I18n.get("move.outside", outsideShots));
-			}
-
 			// Imprimir na consola se verbose for true
-			System.out.println(I18n.get("move.round_prefix", this.number, output));
+			String summary = buildRoundSummary(counts, sunkBoatsCount, hitsPerBoat);
+			System.out.println(I18n.get("move.round_prefix", this.number, summary));
 		}
 
 		// Criar o mapa para o JSON
-		Map<String, Object> response = new HashMap<>();
-		response.put("validShots", validShots);
-		response.put("outsideShots", outsideShots);
-		response.put("repeatedShots", repeatedShots);
-		response.put("missedShots", missedShots);
-
-		// Criar a lista de barcos afundados
-		List<Map<String, Object>> sunkBoats = new ArrayList<>();
-		for (IGame.ShotResult result : this.shotResults) {
-			if (result.valid() && !result.repeated()
-					&& result.ship() != null && result.sunk()) {
-
-				Map<String, Object> boat = new HashMap<>();
-				boat.put("type", result.ship().getCategory());
-				boat.put("count", 1);
-				boat.put("cords", result.ship().getPositions().stream()
-						.map(pos -> "" + pos.getClassicRow()
-								+ pos.getClassicColumn())
-						.toList());
-
-				sunkBoats.add(boat);
-			}
-		}
-		response.put("sunkBoats", sunkBoats);
-
-		// Criar a lista de acertos em barcos que não foram afundados
-		List<Map<String, Object>> boatHits = new ArrayList<>();
-		for (Map.Entry<String, Integer> entry : hitsPerBoat.entrySet()) {
-			Map<String, Object> boat = new HashMap<>();
-			boat.put("type", entry.getKey());
-			boat.put("hits", entry.getValue());
-			boat.put("cords", cordsPerBoat.get(entry.getKey()));
-			boatHits.add(boat);
-		}
-		response.put("hitsOnBoats", boatHits);
+		Map<String, Object> response = buildJsonResponse(counts, hitsPerBoat, coordinatesPerBoat);
 
 		// Serializar o JSON utilizando Jackson
 		String jsonString;
@@ -236,15 +166,108 @@ public class Move implements IMove {
 		return jsonString;
 	}
 
-	public long getDurationMillis() {
-		return durationMillis;
+	/**
+	 * Builds the human-readable summary of a round (used in verbose mode).
+	 */
+	private static String buildRoundSummary(ShotCounts counts,
+			Map<String, Integer> sunkBoatsCount, Map<String, Integer> hitsPerBoat) {
+		// Construção da mensagem de saída
+		StringBuilder output = new StringBuilder();
+
+		if (counts.valid() == 0 && counts.repeated() > 0) {
+			output.append(I18n.get("move.repeated", counts.repeated()));
+		} else {
+			if (counts.valid() > 0) {
+				output.append(I18n.get("move.valid", counts.valid()));
+			}
+
+			// Atualizar lógica para contar múltiplos barcos afundados do mesmo tipo
+			if (!sunkBoatsCount.isEmpty()) {
+				for (Map.Entry<String, Integer> entry : sunkBoatsCount.entrySet()) {
+					String boatName = entry.getKey();
+					int count = entry.getValue();
+					String localizedBoat = I18n.getShipCategory(boatName);
+					output.append(I18n.get("move.sunk", count, localizedBoat)).append(" + ");
+				}
+			}
+
+			if (!hitsPerBoat.isEmpty()) {
+				for (Map.Entry<String, Integer> entry : hitsPerBoat.entrySet()) {
+					String boatName = entry.getKey();
+					int hits = entry.getValue();
+					String localizedBoat = I18n.getShipCategory(boatName);
+					output.append(I18n.get("move.hit", hits, localizedBoat)).append(" + ");
+
+				}
+			}
+
+			if (counts.missed() > 0) {
+				output.append(I18n.get("move.miss", counts.missed()));
+			} else if (!sunkBoatsCount.isEmpty() || !hitsPerBoat.isEmpty()) {
+				output.setLength(output.length() - 2); // Remover o "+" final
+			}
+
+			if (counts.repeated() > 0) {
+				if (counts.valid() > 0) {
+					output.append(", ");
+				}
+				output.append(I18n.get("move.repeated", counts.repeated()));
+			}
+		}
+
+		// Adicionar contagem de tiros fora do tabuleiro
+		if (counts.outside() > 0) {
+			if (!output.isEmpty()) {
+				output.append(", ");
+			}
+			output.append(I18n.get("move.outside", counts.outside()));
+		}
+
+		return output.toString();
 	}
 
-	public void setDurationMillis(long durationMillis) {
-		this.durationMillis = durationMillis;
-	}
+	/**
+	 * Builds the map that is serialized as the JSON result of a round.
+	 */
+	private Map<String, Object> buildJsonResponse(ShotCounts counts,
+			Map<String, Integer> hitsPerBoat, Map<String, List<String>> coordinatesPerBoat) {
+		Map<String, Object> response = new HashMap<>();
+		response.put(KEY_VALID_SHOTS, counts.valid());
+		response.put(KEY_OUTSIDE_SHOTS, counts.outside());
+		response.put(KEY_REPEATED_SHOTS, counts.repeated());
+		response.put(KEY_MISSED_SHOTS, counts.missed());
 
-	public double getDurationInSeconds() {
-		return durationMillis / 1000.0;
+		// Criar a lista de barcos afundados
+		List<Map<String, Object>> sunkBoats = new ArrayList<>();
+		for (IGame.ShotResult result : this.shotResults) {
+			IShip ship = result.ship();
+			if (result.valid() && !result.repeated()
+					&& ship != null && result.sunk()) {
+
+				Map<String, Object> boat = new HashMap<>();
+				boat.put(KEY_TYPE, ship.getCategory());
+				boat.put(KEY_COUNT, 1);
+				boat.put(KEY_CORDS, ship.getPositions().stream()
+						.map(pos -> "" + pos.getClassicRow()
+								+ pos.getClassicColumn())
+						.toList());
+
+				sunkBoats.add(boat);
+			}
+		}
+		response.put(KEY_SUNK_BOATS, sunkBoats);
+
+		// Criar a lista de acertos em barcos que não foram afundados
+		List<Map<String, Object>> boatHits = new ArrayList<>();
+		for (Map.Entry<String, Integer> entry : hitsPerBoat.entrySet()) {
+			Map<String, Object> boat = new HashMap<>();
+			boat.put(KEY_TYPE, entry.getKey());
+			boat.put(KEY_HITS, entry.getValue());
+			boat.put(KEY_CORDS, coordinatesPerBoat.get(entry.getKey()));
+			boatHits.add(boat);
+		}
+		response.put(KEY_HITS_ON_BOATS, boatHits);
+
+		return response;
 	}
 }

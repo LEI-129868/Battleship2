@@ -25,13 +25,13 @@ public class Galleon extends Ship {
 				fillNorth(pos);
 				break;
 			case EAST:
-				fillEast(pos);
+				fillHorizontal(pos, 3);
 				break;
 			case SOUTH:
 				fillSouth(pos);
 				break;
 			case WEST:
-				fillWest(pos);
+				fillHorizontal(pos, 1);
 				break;
 		}
 	}
@@ -64,27 +64,17 @@ public class Galleon extends Ship {
 	}
 
 	/**
-	 * Fills the positions of the Galleon when oriented to the EAST.
+	 * Fills the positions of the Galleon when oriented to the EAST or to the WEST.
+	 * Both shapes are identical except for the column offset of the middle bar.
 	 *
-	 * @param pos The initial position of the ship.
+	 * @param pos          The initial position of the ship.
+	 * @param columnOffset How many columns the middle bar is shifted to the left
+	 *                     (3 for EAST, 1 for WEST).
 	 */
-	private void fillEast(IPosition pos) {
+	private void fillHorizontal(IPosition pos, int columnOffset) {
 		getPositions().add(new Position(pos.getRow(), pos.getColumn()));
 		for (int i = 1; i < 4; i++) {
-			getPositions().add(new Position(pos.getRow() + 1, pos.getColumn() + i - 3));
-		}
-		getPositions().add(new Position(pos.getRow() + 2, pos.getColumn()));
-	}
-
-	/**
-	 * Fills the positions of the Galleon when oriented to the WEST.
-	 *
-	 * @param pos The initial position of the ship.
-	 */
-	private void fillWest(IPosition pos) {
-		getPositions().add(new Position(pos.getRow(), pos.getColumn()));
-		for (int i = 1; i < 4; i++) {
-			getPositions().add(new Position(pos.getRow() + 1, pos.getColumn() + i - 1));
+			getPositions().add(new Position(pos.getRow() + 1, pos.getColumn() + i - columnOffset));
 		}
 		getPositions().add(new Position(pos.getRow() + 2, pos.getColumn()));
 	}
